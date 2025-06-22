@@ -2,14 +2,34 @@
   "name": "backend",
   "version": "1.0.50",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --minify-whitespace --minitfy-syntax --target bun --outdir ./dist",
+    "seed": "bunx prisma db seed",
+    "prisma:push": "bunx prisma db push",
+    "prisma:reset": "bunx prisma db push --force-reset"
+  },
+  "prisma": {
+    "seed": "bun run prisma/seed.js"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@elysiajs/cors": "^1.3.3",
+    "@elysiajs/jwt": "^1.3.1",
+    "@elysiajs/server-timing": "^1.3.0",
+    "@elysiajs/static": "^1.3.0",
+    "@elysiajs/swagger": "^1.3.0",
+    "@prisma/client": "^6.10.1",
+    "elysia": "^1.3.5",
+    "multer": "^2.0.1",
+    "pino": "^9.7.0",
+    "pino-pretty": "^13.0.0",
+    "prisma-extension-pagination": "^0.7.5",
+    "prisma-extension-soft-delete": "^2.0.1"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "@bogeychan/elysia-logger": "^0.1.8",
+    "@types/jsonwebtoken": "^9.0.10",
+    "bun-types": "latest",
+    "prettier": "^3.5.3"
   },
   "module": "src/index.js"
 }

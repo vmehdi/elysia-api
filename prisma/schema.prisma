@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum RuleType {
+  click
+  impression
+}
+
+enum OtpType {
+  AUTH
+  FORGOT
+  ADMIN
+}
+
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  passwordHash String // Renamed from 'password' for clarity and security
+  firstName    String?
+  lastName     String?
+
+  memberships        Membership[]
+  ownedOrganizations Organization[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt // @default(now()) removed for @updatedAt
+  deletedAt          DateTime?
+  OTP                OTP[]
+  RefreshToken       RefreshToken[]
+  Session            Session[]
+}
+
+model OTP {
+  id        String    @id @default(cuid())
+  mobile    String
+  code      String
+  token     String    @unique
+  userId    String
+  type      OtpType
+  expiresAt DateTime
+  user      User      @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  deletedAt DateTime?
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  expiresAt DateTime
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique // ذخیره توکن JWT
+  userAgent String? // اطلاعات مرورگر یا دستگاه کاربر
+  ipAddress String? // آدرس IP کاربر
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, userAgent])
+}
+
+model Organization {
+  id      String @id @default(cuid())
+  name    String
+  owner   User   @relation(fields: [ownerId], references: [id])
+  ownerId String
+
+  members   Membership[]
+  domains   Domain[]
+  customer  Customer?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
+}
+
+model Customer {
+  id               String       @id @default(cuid())
+  stripeCustomerId String?      @unique
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  organizationId   String       @unique
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model Membership {
+  role           Role         @default(MEMBER)
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@id([userId, organizationId])
+}
+
+model DomainRule {
+  id              String   @id @default(cuid())
+  name            String
+  type            RuleType
+  css_selector    String?
+  regex_attribute String?
+  regex_pattern   String?
+
+  domain    Domain    @relation(fields: [domainId], references: [id])
+  domainId  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model DomainTracker {
+  name     String
+  domain   Domain @relation(fields: [domainId], references: [id])
+  domainId String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  deletedAt DateTime?
+
+  @@id([domainId, name])
+}
+
+model Domain {
+  id             String       @id @default(cuid())
+  name           String
+  url            String
+  uniqueId       String       @unique @default(cuid())
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+
+  rules    DomainRule[]
+  trackers DomainTracker[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  deletedAt DateTime?
+}
+
+model Visitor {
+  id              String   @id @default(cuid())
+  fingerprintHash String   @unique
+  createdAt       DateTime @default(now())
+
+  events Event[]
+}
+
+model Event {
+  id           String   @id @default(cuid())
+  type         String
+  timestamp    DateTime
+  sequentialId Int
+  tabId        String
+  url          String
+  value        Json
+
+  visitor   Visitor @relation(fields: [visitorId], references: [id])
+  visitorId String
+}

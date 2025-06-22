@@ -1,7 +1,41 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from 'elysia';
+import { cors } from "@elysiajs/cors";
+import { serverTiming } from "@elysiajs/server-timing";
+import { staticPlugin } from "@elysiajs/static";
+import { swagger } from "@elysiajs/swagger";
+import { AppRoutes } from '@/app/app.router';
+import { transformResult } from '@/utils/helper';
+import logger from '@/utils/logger';
 
-const app = new Elysia().get("/", () => "Hello Elysia").listen(3000);
+const app = new Elysia()
+  .use(cors())
+  .use(serverTiming())
+  .use(staticPlugin())
+  .use(
+    swagger({
+      documentation: {
+        info: {
+          title: "Afito Documentation",
+          version: "1.0.0",
+        },
+      },
+    }),
+  )
+  .use(AppRoutes)
+  .onRequest(({ request }) => {
+    const { url, method } = request;
+    logger.info(`Request received: ${method} ${url}`);
+  })
+  .onError(({ code, set, error }) => {
+    set.status = 404;
+    if (code === "VALIDATION") {
+      set.status = 422;
+      return transformResult(null, error.message, false);
+    }
+    return transformResult(null, "پیدا نشد! یا خطایی بوجود آمد", false);
+  })
+  .listen({ port: Bun.env.PORT || 3000 });
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+logger.info(
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
