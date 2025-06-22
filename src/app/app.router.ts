@@ -6,9 +6,8 @@ import coreRouter from "@/app/core/core.router";
 import { jwtAccess, jwtRefresh, jwtTrack } from '@/utils/jwt';
 
 const routes = new Elysia({ prefix: "/v1" })
-.use(jwtAccess)
+  .use(jwtAccess)
   .use(jwtRefresh)
-  .use(jwtTrack)
   .use(coreRouter)
   .use(Auth)
   .use(profileRouter)

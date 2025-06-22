@@ -6,6 +6,8 @@ import { swagger } from "@elysiajs/swagger";
 import { AppRoutes } from '@/app/app.router';
 import { transformResult } from '@/utils/helper';
 import logger from '@/utils/logger';
+import { jwtTrack } from '@/utils/jwt';
+import socketRouter from '@/app/core/socket.router';
 
 const app = new Elysia()
   .use(cors())
@@ -21,7 +23,9 @@ const app = new Elysia()
       },
     }),
   )
+  .use(jwtTrack)
   .use(AppRoutes)
+  .use(socketRouter)
   .onRequest(({ request }) => {
     const { url, method } = request;
     logger.info(`Request received: ${method} ${url}`);
