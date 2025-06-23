@@ -18,7 +18,6 @@ export async function saveBatchedEvents(payload: any) {
     create: { fingerprintHash: common.fingerprint },
   });
 
-  console.log('⭐==>  1111  <==⭐')
 
   const eventData = events.map((event: any) => ({
     type: event.type,
@@ -30,14 +29,10 @@ export async function saveBatchedEvents(payload: any) {
     visitorId: visitor.id,
   }));
 
-  console.log('⭐==>  2222  <==⭐')
-
   if (eventData.length > 0) {
     await prisma.event.createMany({ data: eventData });
   }
 
-  console.log('⭐==>  3333  <==⭐')
-  
   return eventData.length;
 }
 

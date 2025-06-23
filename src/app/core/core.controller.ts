@@ -3,7 +3,8 @@ import { saveBatchedEvents } from "./ingestion.service";
 
 export const getConfig = async ({ params, set, jwtTrack, headers }: any) => {
   const { domainId } = params;
-  const userAgent = headers.get('user-agent');
+  const userAgent = headers['user-agent'];
+
 
   const domainConfig = await prisma.domain.findUnique({
     where: { uniqueId: domainId },
@@ -47,7 +48,7 @@ export const getConfig = async ({ params, set, jwtTrack, headers }: any) => {
   };
 
 
-  console.log('⭐==>  config for: ', userAgent)
+  console.log('⭐==>  config sent <==⭐')
   return {
     config: finalConfig,
     token: trackingToken,
@@ -57,7 +58,7 @@ export const getConfig = async ({ params, set, jwtTrack, headers }: any) => {
 export const setTrack = async ({ body, set }: any) => {
   const receivedCount = await saveBatchedEvents(body);
 
-  console.log('📌 receivedCount is ->', receivedCount)
+  console.log('📌 receivedCount is ⭐->', receivedCount)
 
   set.status = 202;
   return { status: 'success', received: receivedCount };
