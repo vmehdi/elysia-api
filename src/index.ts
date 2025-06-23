@@ -11,10 +11,9 @@ import socketRouter from '@/app/core/socket.router';
 
 const app = new Elysia()
   .use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
+    preflight: true,
   }))
   .use(serverTiming())
   .use(staticPlugin())
