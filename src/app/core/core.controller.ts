@@ -9,7 +9,6 @@ export const getConfig = async ({ params, set, jwtTrack }: any) => {
     include: { rules: true, trackers: true },
   });
 
-  console.log('📌 domainConfig is ->', domainConfig)
 
   if (!domainConfig) {
     set.status = 404;
@@ -48,8 +47,8 @@ export const getConfig = async ({ params, set, jwtTrack }: any) => {
     },
   };
 
-  console.log('📌 finalConfig is ->', finalConfig)
 
+  console.log('⭐==>  return config  <==⭐')
   return {
     config: finalConfig,
     token: trackingToken,
