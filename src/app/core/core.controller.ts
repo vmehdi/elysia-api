@@ -9,6 +9,8 @@ export const getConfig = async ({ params, set, jwtTrack }: any) => {
     include: { rules: true, trackers: true },
   });
 
+  console.log('📌 domainConfig is ->', domainConfig)
+
   if (!domainConfig) {
     set.status = 404;
     return { error: 'Domain not found' };
@@ -18,6 +20,8 @@ export const getConfig = async ({ params, set, jwtTrack }: any) => {
     domainId: domainConfig.id,
     type: 'TRACKING_TOKEN'
   });
+
+  console.log('📌 trackingToken is ->', trackingToken)
 
   const finalConfig = {
     enabledTrackers: domainConfig.trackers.map((t) => t.name),
@@ -43,6 +47,8 @@ export const getConfig = async ({ params, set, jwtTrack }: any) => {
         })),
     },
   };
+
+  console.log('📌 finalConfig is ->', finalConfig)
 
   return {
     config: finalConfig,
