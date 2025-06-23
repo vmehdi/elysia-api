@@ -1,8 +1,9 @@
 import { prisma } from "@/utils/prisma";
 import { saveBatchedEvents } from "./ingestion.service";
 
-export const getConfig = async ({ params, set, jwtTrack }: any) => {
+export const getConfig = async ({ params, set, jwtTrack, headers }: any) => {
   const { domainId } = params;
+  const userAgent = headers.get('user-agent');
 
   const domainConfig = await prisma.domain.findUnique({
     where: { uniqueId: domainId },
@@ -19,8 +20,6 @@ export const getConfig = async ({ params, set, jwtTrack }: any) => {
     domainId: domainConfig.id,
     type: 'TRACKING_TOKEN'
   });
-
-  console.log('📌 trackingToken is ->', trackingToken)
 
   const finalConfig = {
     enabledTrackers: domainConfig.trackers.map((t) => t.name),
@@ -48,7 +47,7 @@ export const getConfig = async ({ params, set, jwtTrack }: any) => {
   };
 
 
-  console.log('⭐==>  return config  <==⭐')
+  console.log('⭐==>  config for: ', userAgent)
   return {
     config: finalConfig,
     token: trackingToken,
@@ -57,6 +56,9 @@ export const getConfig = async ({ params, set, jwtTrack }: any) => {
 
 export const setTrack = async ({ body, set }: any) => {
   const receivedCount = await saveBatchedEvents(body);
+
+  console.log('📌 receivedCount is ->', receivedCount)
+
   set.status = 202;
   return { status: 'success', received: receivedCount };
 }
