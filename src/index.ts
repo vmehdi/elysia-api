@@ -10,13 +10,7 @@ import { jwtTrack } from '@/utils/jwt';
 import socketRouter from '@/app/core/socket.router';
 
 const app = new Elysia()
-  .use(cors({
-    origin: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-    preflight: true
-  }))
+  .use(cors())
   .use(serverTiming())
   .use(staticPlugin())
   .use(

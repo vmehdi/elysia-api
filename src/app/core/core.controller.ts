@@ -5,6 +5,8 @@ export const getConfig = async ({ params, set, jwtTrack, headers }: any) => {
   const { domainId } = params;
   const userAgent = headers['user-agent'];
 
+  console.log('📌 userAgent is ->', userAgent)
+
 
   const domainConfig = await prisma.domain.findUnique({
     where: { uniqueId: domainId },
@@ -48,7 +50,8 @@ export const getConfig = async ({ params, set, jwtTrack, headers }: any) => {
   };
 
 
-  console.log('⭐==>  config sent <==⭐')
+  console.log('⭐==>  config sent <==⭐', userAgent)
+  set.status = 200;
   return {
     config: finalConfig,
     token: trackingToken,
