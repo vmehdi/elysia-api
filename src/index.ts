@@ -36,6 +36,8 @@ const app = new Elysia()
       set.status = 422;
       return transformResult(null, error.message, false);
     }
+    console.log('📌 code ;is ->', code);
+    console.log('📌 error is ->', error)
     return transformResult(null, "پیدا نشد! یا خطایی بوجود آمد", false);
   })
   .listen({ port: Bun.env.PORT || 3000 });
