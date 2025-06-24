@@ -10,7 +10,13 @@ import { jwtTrack } from '@/utils/jwt';
 import socketRouter from '@/app/core/socket.router';
 
 const app = new Elysia()
-  .use(cors())
+  .use(cors({
+    origin: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+    preflight: true
+  }))
   .use(serverTiming())
   .use(staticPlugin())
   .use(
@@ -36,8 +42,7 @@ const app = new Elysia()
       set.status = 422;
       return transformResult(null, error.message, false);
     }
-    console.log('📌 code ;is ->', code);
-    console.log('📌 error is ->', error)
+    logger.error(error)
     return transformResult(null, "پیدا نشد! یا خطایی بوجود آمد", false);
   })
   .listen({ port: Bun.env.PORT || 3000 });
