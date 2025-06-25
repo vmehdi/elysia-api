@@ -18,6 +18,7 @@ export async function saveBatchedEvents(payload: any) {
     create: { fingerprintHash: common.fingerprint },
   });
 
+  console.log('📌 events is ->' , events)
 
   const eventData = events.map((event: any) => ({
     type: event.type,
