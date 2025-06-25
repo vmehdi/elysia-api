@@ -34,7 +34,7 @@ const coreRouter = new Elysia()
           is_bot: t.Boolean(),
           incognito: t.Boolean(),
           lang: t.String(),
-          screen: t.Number(),
+          screen: t.Object(t.Unknown()),
           cookies: t.Array(t.String()),
           site_height: t.Number()
         }),
