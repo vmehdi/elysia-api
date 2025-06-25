@@ -30,23 +30,23 @@ const coreRouter = new Elysia()
       body: t.Object({
         common: t.Object({
           fingerprint: t.String(),
-          tab_id: t.String(),
-          is_bot: t.Boolean(),
-          incognito: t.Boolean(),
-          lang: t.String(),
-          screen: t.Number(),
-          cookies: t.Array(t.String()),
-          site_height: t.Number()
+          // tab_id: t.String(),
+          // is_bot: t.Boolean(),
+          // incognito: t.Boolean(),
+          // lang: t.String(),
+          // screen: t.Number(),
+          // cookies: t.Array(t.String()),
+          // site_height: t.Number()
         }),
         events: t.Array(
           t.Object({
             type: t.String(),
-            url: t.String(),
-            orientation: t.String(),
             value: t.Unknown(),
-            timestamp: t.Number(),
-            scroll: t.Number(),
-            sequential_id: t.Number(),
+            url: t.Optional(t.String()),
+            orientation: t.Optional(t.String()),
+            timestamp: t.Optional(t.Number()),
+            scroll: t.Optional(t.Number()),
+            sequential_id: t.Optional(t.Number(),
           })
         ),
       }),
