@@ -10,7 +10,6 @@ export async function saveBatchedEvents(payload: any) {
     console.warn("[Ingestion Service] Received invalid batched payload.");
     return 0;
   }
-  console.log('📌 common is ->', common)
 
   const visitor = await prisma.visitor.upsert({
     where: { fingerprintHash: common.fingerprint },
@@ -18,7 +17,6 @@ export async function saveBatchedEvents(payload: any) {
     create: { fingerprintHash: common.fingerprint },
   });
 
-  console.log('📌 events is ->' , events)
 
   const eventData = events.map((event: any) => ({
     type: event.type,
