@@ -1,88 +1,11 @@
 import { prisma } from "@/utils/prisma";
-import { OTP, OtpType, RefreshToken, User } from "@prisma/client";
-import crypto from "crypto";
-import { __DEV__, generateOTP } from "@/utils/helper";
-
-export const findUserByMobile = async (
-  mobile: string,
-): Promise<User | null> => {
-  try {
-    return await prisma.user.findUnique({ where: { mobile } });
-  } catch (error) {
-    console.error("Error finding user by mobile:", error);
-    throw error;
-  }
-};
+import { RefreshToken, User } from "@prisma/client";
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
   try {
     return prisma.user.findUnique({ where: { email } });
   } catch (error) {
-    console.error("Error finding user by mobile:", error);
-    throw error;
-  }
-};
-
-export const createOTP = async ({
-  userId,
-  mobile,
-  type,
-}: {
-  userId: string;
-  mobile: string;
-  type: OtpType;
-}): Promise<OTP> => {
-  try {
-    // پاک‌سازی OTPهای منقضی‌شده قبل از ساخت جدید
-    await prisma.oTP.deleteMany({
-      where: { expiresAt: { lt: new Date() } },
-    });
-    const code = generateOTP();
-    const token = crypto.randomUUID();
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 2); // تنظیم زمان انقضا (۲ دقیقه)
-
-    if (__DEV__) {
-      console.log("---->  Code is:", code);
-    }
-
-    return await prisma.oTP.create({
-      data: {
-        mobile,
-        userId,
-        token,
-        code,
-        type,
-        expiresAt,
-      },
-    });
-  } catch (error) {
-    console.error("Error creating OTP:", error);
-    throw error;
-  }
-};
-
-export const findOtpByToken = async (token: string): Promise<OTP | null> => {
-  try {
-    return prisma.oTP.findUnique({
-      where: { token },
-      include: {
-        user: true,
-      },
-    });
-  } catch (error) {
-    console.error("Error finding user by mobile:", error);
-    throw error;
-  }
-};
-
-export const deleteOtpByID = async (id: string): Promise<OTP> => {
-  try {
-    return prisma.oTP.delete({
-      where: { id },
-    });
-  } catch (error) {
-    console.error("Error deleting OTP:", error);
+    console.error("Error finding user by email:", error);
     throw error;
   }
 };

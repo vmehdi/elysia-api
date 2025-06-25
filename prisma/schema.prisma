@@ -18,41 +18,21 @@ enum RuleType {
   impression
 }
 
-enum OtpType {
-  AUTH
-  FORGOT
-  ADMIN
-}
-
 model User {
-  id           String  @id @default(cuid())
-  email        String  @unique
-  passwordHash String // Renamed from 'password' for clarity and security
-  firstName    String?
-  lastName     String?
+  id              String  @id @default(cuid())
+  email           String  @unique
+  passwordHash    String
+  firstName       String?
+  lastName        String?
+  isEmailVerified Boolean @default(false)
 
   memberships        Membership[]
   ownedOrganizations Organization[]
   createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt // @default(now()) removed for @updatedAt
+  updatedAt          DateTime       @default(now()) @updatedAt
   deletedAt          DateTime?
-  OTP                OTP[]
   RefreshToken       RefreshToken[]
   Session            Session[]
-}
-
-model OTP {
-  id        String    @id @default(cuid())
-  mobile    String
-  code      String
-  token     String    @unique
-  userId    String
-  type      OtpType
-  expiresAt DateTime
-  user      User      @relation(fields: [userId], references: [id])
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
-  deletedAt DateTime?
 }
 
 model RefreshToken {
@@ -69,9 +49,9 @@ model Session {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  token     String   @unique // ذخیره توکن JWT
-  userAgent String? // اطلاعات مرورگر یا دستگاه کاربر
-  ipAddress String? // آدرس IP کاربر
+  token     String   @unique 
+  userAgent String? 
+  ipAddress String?
   createdAt DateTime @default(now())
   expiresAt DateTime
   revoked   Boolean  @default(false)

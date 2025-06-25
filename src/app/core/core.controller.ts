@@ -2,15 +2,15 @@ import { prisma } from "@/utils/prisma";
 import { saveBatchedEvents } from "./ingestion.service";
 
 export const getConfig = async ({ params, set, jwtTrack, headers }: any) => {
-  const { domainId } = params;
-  console.log('📌 domainId is ->', domainId)
+  const { licenseKey } = params;
+  console.log('📌 licenseKey is ->', licenseKey)
   // const userAgent = headers['user-agent'];
 
   // console.log('📌 userAgent is ->', userAgent)
 
 
   const domainConfig = await prisma.domain.findUnique({
-    where: { uniqueId: domainId },
+    where: { uniqueId: licenseKey },
     include: { rules: true, trackers: true },
   });
 
@@ -21,7 +21,7 @@ export const getConfig = async ({ params, set, jwtTrack, headers }: any) => {
   }
 
   const trackingToken = await jwtTrack.sign({
-    domainId: domainConfig.id,
+    licenseKey: domainConfig.id,
     type: 'TRACKING_TOKEN'
   });
 
