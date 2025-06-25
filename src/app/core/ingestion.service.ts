@@ -22,7 +22,7 @@ export async function saveBatchedEvents(payload: any) {
   const eventData = events.map((event: any) => ({
     type: event.type,
     value: event.value,
-    timestamp: new Date(event.timestamp),
+    timestamp: new Date(event.timestamp * 1000),
     sequentialId: event.sequential_id,
     tabId: common.tab_id,
     url: common.url,
@@ -57,7 +57,7 @@ export async function saveSingleEvent(payload: any) {
     data: {
       type: payload.type,
       value: payload.value,
-      timestamp: new Date(payload.timestamp),
+      timestamp: new Date(payload.timestamp * 1000),
       sequentialId: payload.sequential_id,
       tabId: payload.tab_id,
       url: payload.url, // URL is part of the single event payload
