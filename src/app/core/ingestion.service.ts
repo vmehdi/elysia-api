@@ -25,7 +25,7 @@ export async function saveBatchedEvents(payload: any) {
     timestamp: new Date(event.timestamp),
     sequentialId: event.sequential_id,
     tabId: common.tab_id,
-    url: common.url, // URL comes from the common object in a batch
+    url: common.url,
     visitorId: visitor.id,
   }));
 

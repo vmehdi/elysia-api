@@ -42,11 +42,11 @@ const coreRouter = new Elysia()
           t.Object({
             type: t.String(),
             value: t.Unknown(),
-            url: t.Optional(t.String()),
-            orientation: t.Optional(t.String()),
-            timestamp: t.Optional(t.Number()),
-            scroll: t.Optional(t.Number()),
-            sequential_id: t.Optional(t.Number()),
+            // url: t.Optional(t.String()),
+            // orientation: t.Optional(t.String()),
+            // timestamp: t.Optional(t.Number()),
+            // scroll: t.Optional(t.Number()),
+            // sequential_id: t.Optional(t.Number()),
           })
         ),
       }),
