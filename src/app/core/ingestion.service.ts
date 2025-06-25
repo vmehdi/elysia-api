@@ -26,7 +26,7 @@ export async function saveBatchedEvents(payload: any) {
     timestamp: new Date(event.timestamp * 1000),
     sequentialId: event.sequential_id,
     tabId: common.tab_id,
-    url: common.url,
+    url: event.url,
     visitorId: visitor.id,
   }));
 
