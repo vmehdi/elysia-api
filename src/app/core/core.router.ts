@@ -46,7 +46,7 @@ const coreRouter = new Elysia()
             orientation: t.Optional(t.String()),
             timestamp: t.Optional(t.Number()),
             scroll: t.Optional(t.Number()),
-            sequential_id: t.Optional(t.Number(),
+            sequential_id: t.Optional(t.Number()),
           })
         ),
       }),
