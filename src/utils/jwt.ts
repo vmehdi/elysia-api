@@ -1,5 +1,5 @@
 import jwt from "@elysiajs/jwt";
-import { t } from "elysia";
+import Elysia, { t } from "elysia";
 
 export const jwtAccess = jwt({
   name: "jwt",
@@ -14,6 +14,7 @@ export const jwtRefresh = jwt({
   secret: Bun.env.JWT_REFRESH_SECRET || 'sdfwefw',
   exp: "30d",
 });
+
 
 export const jwtTrack = jwt({
   name: 'jwtTrack',

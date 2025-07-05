@@ -8,7 +8,6 @@ import domainRouter from "./domain/domain.router";
 
 const routes = new Elysia({ prefix: "/v1" })
   .use(jwtAccess)
-  .use(jwtRefresh)
   .use(coreRouter)
   .use(Auth)
   .use(profileRouter)

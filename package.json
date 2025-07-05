@@ -11,7 +11,7 @@
   },
   "prisma": {
     "seed": "bun run prisma/seed.js",
-    "seed2": "bun run prisma/seed2.js"
+    "seed-init": "bun run prisma/seed-init.js"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.3.3",

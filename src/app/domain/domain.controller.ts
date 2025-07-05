@@ -27,11 +27,11 @@ export const createDomainWithDefaults = async ({ body, user, set }: any) => {
       });
 
       // 2. Create the default enabled trackers for this domain
-      const enabledTrackers = [
+      const trackers = [
         'pageLoad', 'click-enrichment', 'click-rage', 
         'click-generic', 'impression', 'heatmap', 'dnd', 'keypress'
       ];
-      const trackerData = enabledTrackers.map(tName => ({
+      const trackerData = trackers.map(tName => ({
         name: tName,
         domainId: domain.id,
       }));

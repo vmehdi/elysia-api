@@ -1,7 +1,8 @@
 import { prisma } from "@/utils/prisma";
 import crypto from "crypto";
-import { userTransform, transformResult } from "@/utils/helper";
+import { userTransform, transformResult, __DEV__ } from "@/utils/helper";
 import DB from "@/app/app.model";
+import logger from "@/utils/logger";
 
 async function updateSessionById(id: string, data: any) {
   return prisma.session.update({ where: { id }, data });
@@ -13,7 +14,7 @@ async function issueTokensAndSession({
   jwtRefresh,
   headers,
   ip,
-  auth,
+  authToken,
   refresh_token,
 }: any) {
   const jwtToken = await jwt.sign({ id: user.id });
@@ -32,13 +33,18 @@ async function issueTokensAndSession({
     ipAddress: ip || headers["x-forwarded-for"] || headers["x-real-ip"] || "none",
     expiresAt: expiresAt,
   });
-  auth.set({ value: jwtToken, maxAge: 7 * 86400, secure: true });
-  refresh_token.set({
-    value: refreshToken,
-    httpOnly: true,
-    maxAge: 30 * 86400,
-    secure: true,
-  });
+  authToken.set({ value: jwtToken, maxAge: 7 * 86400, secure: !__DEV__ });
+  try {
+    refresh_token.set({
+      // value: jwtToken,
+      // httpOnly: true,
+      // maxAge: 30 * 86400,
+      // secure: !__DEV__,
+    });
+  } catch (cookieError) {
+    logger.error("Error setting refresh_token cookie:", cookieError);
+  }
+
   return { sessionId, jwtToken, refreshToken, expiresAt };
 }
 
@@ -51,7 +57,7 @@ async function validateSessionToken(token: string) {
 }
 
 // --- Main Auth Logic ---
-export async function register({ body, set }: any) {
+export async function register({ body, set, headers, ip }: any) {
   const { email, password } = body;
   if (!email || !password) {
     set.status = 400;
@@ -74,10 +80,26 @@ export async function register({ body, set }: any) {
       isEmailVerified: false,
     },
   });
-  return transformResult({ profile: userTransform(user) }, "ثبت نام با موفقیت انجام شد");
+  await prisma.session.deleteMany({
+    where: {
+      userId: user.id,
+      userAgent: headers["user-agent"],
+    },
+  });
+  const sessionToken = Bun.randomUUIDv7();
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      token: sessionToken,
+      userAgent: headers["user-agent"],
+      ipAddress: ip || headers["x-forwarded-for"] || headers["x-real-ip"] || "none",
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  });
+  return transformResult({ sessionToken, profile: userTransform(user) }, "ثبت نام با موفقیت انجام شد");
 }
 
-export async function login({ body, set, jwt, jwtRefresh, headers, ip, cookie: { auth, refresh_token } }: any) {
+export async function login({ body, set, jwt, jwtRefresh, headers, ip, cookie: { authToken, refresh_token } }: any) {
   const { email, password } = body;
   if (!email || !password) {
     set.status = 400;
@@ -93,22 +115,32 @@ export async function login({ body, set, jwt, jwtRefresh, headers, ip, cookie: {
     set.status = 403;
     return transformResult(null, "اطلاعات ورود اشتباه است", false);
   }
-  const { sessionId, jwtToken, refreshToken, expiresAt } = await issueTokensAndSession({
+  await prisma.session.deleteMany({
+    where: {
+      userId: user.id,
+      userAgent: headers["user-agent"],
+    },
+  });
+  const sessionToken = Bun.randomUUIDv7();
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      token: sessionToken,
+      userAgent: headers["user-agent"],
+      ipAddress: ip || headers["x-forwarded-for"] || headers["x-real-ip"] || "none",
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  });
+  const res = await issueTokensAndSession({
     user,
     jwt,
     jwtRefresh,
     headers,
     ip,
-    auth,
+    authToken,
     refresh_token,
   });
-  return transformResult({
-    sessionId,
-    accessToken: jwtToken,
-    refreshToken,
-    expiresAt,
-    profile: { ...userTransform(user) },
-  });
+  return transformResult({ ...res });
 }
 
 export const refresh = async ({ body, set, jwt }: any) => {

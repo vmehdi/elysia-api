@@ -49,8 +49,8 @@ model Session {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  token     String   @unique 
-  userAgent String? 
+  token     String   @unique
+  userAgent String?
   ipAddress String?
   createdAt DateTime @default(now())
   expiresAt DateTime
@@ -134,8 +134,10 @@ model Domain {
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
 
-  rules    DomainRule[]
-  trackers DomainTracker[]
+  rules          DomainRule[]
+  trackers       DomainTracker[]
+  isTracking     Boolean         @default(true)
+  trackerVersion String?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
@@ -159,6 +161,10 @@ model Event {
   url          String
   value        Json
 
+  orientation  String?  
+  scrollDepth  Int?
+
   visitor   Visitor @relation(fields: [visitorId], references: [id])
   visitorId String
+  createdAt       DateTime @default(now())
 }

@@ -1,6 +1,31 @@
-import { Elysia, t } from "elysia";
-import { getConfig, setTrack } from "./core.controller";
+import { Elysia } from "elysia";
+import { checkLicense, setTrack } from "./core.controller";
 import { isTrackerAuthenticated } from "@/middleware/track-auth";
+import { t } from "elysia";
+
+const EventPayloadSchema = t.Object({
+  t: t.String(),       // Event type (e.g., 'click', 'impression', etc.)
+  p: t.Unknown(),      // Event payload (varies per type)
+  ts: t.Number(),      // Timestamp (seconds)
+  url: t.String(),     // Current page URL
+  o: t.Optional(t.String()),  // Orientation (e.g., 'landscape')
+  sd: t.Optional(t.Number()), // Scroll depth
+  sid: t.Optional(t.Number()) // Sequential ID
+});
+
+const TrackRequestSchema = t.Object({
+  common: t.Object({
+    fp: t.String(),                   // Fingerprint
+    tb: t.String(),                   // Tab ID
+    b: t.Boolean(),                   // isBot
+    i: t.Boolean(),                   // incognito
+    l: t.String(),                    // language
+    s: t.Object(t.Unknown()),         // screen data
+    h: t.Number(),                    // site height
+    c: t.Array(t.Unknown()),          // cookies
+  }),
+  events: t.Array(EventPayloadSchema),
+});
 
 const coreRouter = new Elysia()
   .derive(({ request }) => ({
@@ -9,48 +34,23 @@ const coreRouter = new Elysia()
       request.headers.get("x-real-ip") ||
       "none",
   }))
-  .get("/status", ({ ip }) => ({
-    success: true,
-    ip,
-  }))
+  .get('/status', () => ({ success: true }))
   .get(
-    '/config/:domainId',
-    getConfig,
+    '/v/:license',
+    checkLicense,
     {
       params: t.Object({
-        domainId: t.String(),
+        license: t.String(),
       }),
     }
   )
   .post(
-    '/track',
+    '/t',
     setTrack,
     {
       beforeHandle: [isTrackerAuthenticated],
-      body: t.Object({
-        common: t.Object({
-          fingerprint: t.String(),
-          tab_id: t.String(),
-          is_bot: t.Boolean(),
-          incognito: t.Boolean(),
-          lang: t.String(),
-          screen: t.Object(t.Unknown()),
-          cookies: t.Array(t.String()),
-          site_height: t.Number()
-        }),
-        events: t.Array(
-          t.Object({
-            type: t.String(),
-            value: t.Unknown(),
-            timestamp: t.Number(),
-            url: t.String(),
-            orientation: t.Optional(t.String()),
-            scroll: t.Optional(t.Number()),
-            sequential_id: t.Optional(t.Number()),
-          })
-        ),
-      }),
+      body: TrackRequestSchema
     }
   );
 
-export default coreRouter 
+export default coreRouter;

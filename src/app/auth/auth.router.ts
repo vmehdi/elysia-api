@@ -1,8 +1,12 @@
 import { Elysia, t } from "elysia";
 import { refresh, logout, login, register } from "./auth.controller";
 import { isAuthenticated } from "@/middleware/auth";
+import { transformResult } from "@/utils/helper";
+import { jwtRefresh } from "@/utils/jwt";
 
 const auth = new Elysia()
+  .use(jwtRefresh)
+  .get("/auth/test", () => (transformResult({ test: 'this is test' })))
   .post("/auth/register", register, {
     body: t.Object({
       email: t.String(),
