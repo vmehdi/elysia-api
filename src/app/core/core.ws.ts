@@ -5,6 +5,7 @@ import { isEncrypted, decryptPayload } from '@/utils/decryption-service';
 import logger from '@/utils/logger';
 import { saveAuth, getAuth, removeAuth } from '@/utils/wsAuthMap';
 import { registerSocket, unregisterSocket } from '@/utils/socket-fingerprint-map';
+import { streamToPlayer } from '@/app/plugins/live-play';
 
 function extractToken(ws: WebSocket): string {
   return (ws as any)?.data?.query?.token || '';
@@ -34,7 +35,7 @@ const simulatedMessages = [
     },
   },
   {
-    delay: 30000,
+    delay: 45000,
     message: {
       t: MessageType.TRACKER_TOGGLE,
       p: { tn: 'heatmap', s: false },
@@ -47,14 +48,14 @@ export const setupLiveWebSocket: any = {
     const token = query?.token;
 
     if (!token) {
-      ws.send({ t: 'error', p: { message: 'Missing token' } });
+      ws.send(JSON.stringify({ t: 'error', p: { message: 'Missing token' } }));
       ws.close();
       return;
     }
 
     const payload = await jwtTrack.verify(token);
     if (!payload?.domainId || payload.type !== 'TRACKING_TOKEN') {
-      ws.send({ t: 'error', p: { message: 'Invalid token' } });
+      ws.send(JSON.stringify({ t: 'error', p: { message: 'Invalid token' } }));
       ws.close();
       return;
     }
@@ -77,8 +78,6 @@ export const setupLiveWebSocket: any = {
         }
       }, delay);
     }
-
-    ws.send(JSON.stringify({ t: 'ping', p: { msg: 'connected' } }));
   },
 
   close(ws: WebSocket) {
@@ -105,6 +104,8 @@ export const setupLiveWebSocket: any = {
           return;
         }
 
+        if (payload?.fp) registerSocket(payload.fp, ws, 'tracker');
+
         const domain = await prisma.domain.findUnique({
           where: { id: auth.domainId },
           include: { rules: true, trackers: true },
@@ -115,8 +116,6 @@ export const setupLiveWebSocket: any = {
           ws.close();
           return;
         }
-
-        if (payload?.fp) registerSocket(payload.fp, ws);
 
         const config = {
           trackers: domain.trackers.map((t) => t.name),
@@ -156,6 +155,9 @@ export const setupLiveWebSocket: any = {
       }
 
       if (RealTimeEventTypes.has(raw.t)) {
+        if (payload?.fp) {
+          streamToPlayer(payload.fp, { rr_events: payload.p.rr_events });
+        }
         const saved = await saveSingleEvent(payload);
         logger.info(`✅ [WS] Real-time event '${raw.t}' saved. count: ${saved}`);
       } else {
