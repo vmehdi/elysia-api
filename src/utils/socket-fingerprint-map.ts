@@ -1,65 +1,78 @@
-import type { WebSocket } from 'bun';
+// file: utils/socket-fingerprint-map.ts
+import type { ServerWebSocket } from 'bun';
 
-// A mapping from fingerprint to set of active WebSocket connections
-const fpToSockets = new Map<string, Set<WebSocket>>();
+// fp -> Set of { socket, role }
+type Role = 'client' | 'player';
+
+interface SocketInfo {
+  socket: ServerWebSocket;
+  role: Role;
+}
+
+const fpSocketMap = new Map<string, Set<SocketInfo>>();
 
 /**
- * Register a socket under a specific fingerprint
+ * ثبت یک WebSocket جدید برای یک اثر انگشت مشخص
  */
-export function registerSocket(fp: string, ws: WebSocket) {
-  if (!fpToSockets.has(fp)) {
-    fpToSockets.set(fp, new Set());
-  }
-  fpToSockets.get(fp)!.add(ws);
+export function registerSocket(fp: string, ws: ServerWebSocket, role: Role = 'client') {
+  console.log('🔌 Registered socket for FP:', fp, 'Role:', role);
+  if (!fpSocketMap.has(fp)) fpSocketMap.set(fp, new Set());
+  fpSocketMap.get(fp)!.add({ socket: ws, role });
 }
 
 /**
- * Unregister a socket (called when connection closes)
+ * حذف یک WebSocket از تمام اثرانگشت‌ها
  */
-export function unregisterSocket(ws: WebSocket) {
-  for (const [fp, sockets] of fpToSockets.entries()) {
-    if (sockets.has(ws)) {
-      sockets.delete(ws);
-      if (sockets.size === 0) {
-        fpToSockets.delete(fp);
+export function unregisterSocket(ws: ServerWebSocket) {
+  for (const [fp, set] of fpSocketMap.entries()) {
+    for (const info of set) {
+      if (info.socket === ws) {
+        set.delete(info);
+        if (set.size === 0) fpSocketMap.delete(fp);
+        return;
       }
-      break;
     }
   }
 }
 
 /**
- * Send a message to all sockets for a given fingerprint
+ * دریافت WebSocketهای فعال برای یک اثرانگشت خاص (با نقش اختیاری)
  */
-export function sendToFingerprint(fp: string, data: any) {
-  const sockets = fpToSockets.get(fp);
-  if (!sockets) return;
+export function getSocketsByFingerprint(fp: string, role?: Role): ServerWebSocket[] {
+  const set = fpSocketMap.get(fp);
+  if (!set) return [];
+  return [...set]
+    .filter(info => !role || info.role === role)
+    .map(info => info.socket);
+}
 
+/**
+ * ارسال پیام به تمام WebSocketهای مرتبط با یک اثرانگشت خاص
+ */
+export function sendToFingerprint(fp: string, data: any, role?: Role) {
+  const sockets = getSocketsByFingerprint(fp, role);
   const message = typeof data === 'string' ? data : JSON.stringify(data);
-
   for (const ws of sockets) {
     try {
       ws.send(message);
     } catch (err) {
-      console.error('Failed to send to socket', err);
+      console.error('❌ Failed to send to socket', err);
     }
   }
 }
 
 /**
- * Get number of active sockets (optional utility)
+ * شمارش تمام WebSocketهای فعال
  */
 export function getActiveSocketCount(): number {
   let count = 0;
-  for (const sockets of fpToSockets.values()) {
-    count += sockets.size;
-  }
+  for (const set of fpSocketMap.values()) count += set.size;
   return count;
 }
 
 /**
- * For debugging: get all fingerprints currently connected
+ * دریافت تمام اثرانگشت‌هایی که WebSocket دارند
  */
 export function getAllFingerprints(): string[] {
-  return [...fpToSockets.keys()];
+  return [...fpSocketMap.keys()];
 }

@@ -41,7 +41,7 @@ function expandEvent(event: Record<string, any>) {
   for (const key in event) {
     const fullKey = eventMap[key] || key;
     if (fullKey === 'timestamp') {
-      result[fullKey] = new Date(event[key] * 1000);
+      result[fullKey] = new Date(event[key]);
     } else {
       result[fullKey] = event[key];
     }
@@ -107,7 +107,7 @@ export async function saveSingleEvent(payload: any) {
   await prisma.event.create({
     data: {
       type: payload.t,
-      timestamp: new Date(payload.ts * 1000),
+      timestamp: new Date(payload.ts),
       sequentialId: payload.sid ?? 0,
       orientation: payload.o,
       scrollDepth: payload.sd,

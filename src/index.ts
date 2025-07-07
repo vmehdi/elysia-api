@@ -7,6 +7,8 @@ import { AppRoutes } from '@/app/app.router';
 import { transformResult } from '@/utils/helper';
 import logger from '@/utils/logger';
 import { jwtTrack } from '@/utils/jwt';
+import { liveLoggerPlugin } from './app/plugins/live-logger';
+import { livePlayerPlugin, setupLivePlyer } from './app/plugins/live-play';
 import { setupLiveWebSocket } from './app/core/core.ws';
 
 const app = new Elysia()
@@ -31,7 +33,10 @@ const app = new Elysia()
   )
   .use(jwtTrack)
   .use(AppRoutes)
-  .ws('/ws', setupLiveWebSocket)
+  .use(liveLoggerPlugin)
+  .use(livePlayerPlugin)
+  .ws('/ws', setupLiveWebSocket as any)
+  .ws('/play-ws', setupLivePlyer as any)
   .onRequest(({ request }) => {
     const { url, method } = request;
     logger.info(`Request received: ${method} ${url}`);
