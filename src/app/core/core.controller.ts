@@ -65,7 +65,7 @@ export const checkLicense = async ({
   return {
     token,
     cdn_url: domain.trackerVersion
-      ? `https://cdn.jsdelivr.net/npm/segmentaim-tracker@${domain.trackerVersion}/dist/segmentaim.yjs`
+      ? `https://cdn.jsdelivr.net/npm/segmentaim-tracker@${domain.trackerVersion}/dist/segmentaim.js`
       : `https://cdn.jsdelivr.net/npm/segmentaim-tracker/dist/segmentaim.es.js`,
     config,
   };
