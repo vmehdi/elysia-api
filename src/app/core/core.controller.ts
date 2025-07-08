@@ -1,6 +1,7 @@
 import type { Context } from 'elysia';
 import { prisma } from "@/utils/prisma";
 import { saveBatchedEvents } from "./ingestion.service";
+import logger from '@/utils/logger';
 
 export const checkLicense = async ({
   params,
@@ -64,7 +65,7 @@ export const checkLicense = async ({
   return {
     token,
     cdn_url: domain.trackerVersion
-      ? `https://cdn.jsdelivr.net/npm/segmentaim-tracker@${domain.trackerVersion}/dist/segmentaim.es.js`
+      ? `https://cdn.jsdelivr.net/npm/segmentaim-tracker@${domain.trackerVersion}/dist/segmentaim.yjs`
       : `https://cdn.jsdelivr.net/npm/segmentaim-tracker/dist/segmentaim.es.js`,
     config,
   };
