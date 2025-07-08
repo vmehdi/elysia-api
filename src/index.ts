@@ -20,7 +20,7 @@ const app = new Elysia()
     preflight: true
   }))
   .use(serverTiming())
-  .use(staticPlugin())
+  .use(staticPlugin({ prefix: '/' }))
   .use(
     swagger({
       documentation: {

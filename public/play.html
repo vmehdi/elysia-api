@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Session Viewer</title>
+  <meta charset="UTF-8" />
+  <script src="player.js"></script>
+  <link href="player.css" rel="stylesheet" />
+  <style>
+    body {
+      background: #111;
+      color: white;
+      padding: 1rem;
+      font-family: sans-serif;
+    }
+    header, footer {
+      padding: 1rem;
+      text-align: center;
+      background-color: #222;
+      margin-bottom: 1rem;
+    }
+    #player-container {
+      max-width: 900px;
+      margin: auto;
+      border: 2px solid #444;
+      background-color: #000;
+    }
+  </style>
+</head>
+<body>
+  <header><h1>👁 Live RRWeb Player</h1></header>
+  <div id="player-container"></div>
+  <footer style="position: fixed; bottom: 0; width: 100%;">Powered by SegmentAim 🔥</footer>
+
+  <script>
+    (function() {
+      const urlParams = new URLSearchParams(location.search);
+      const fp = urlParams.get("fp");
+      if (!fp) {
+        document.getElementById("player-container").innerHTML = "<p style='color:red;'>Missing fingerprint in URL (?fp=...)</p>";
+        return;
+      }
+
+      const ws = new WebSocket("ws://" + location.host + "/play-ws?fp=" + fp);
+      let player;
+      let initialized = false;
+
+      ws.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === 'recording') {
+            const rawEvents = msg.data?.rr_events;
+            if (!Array.isArray(rawEvents) || rawEvents.length === 0) {
+              console.warn('⛔ Ignored empty rr_events message.');
+              return;
+            }
+            const events = rawEvents.filter(ev => ev && ev.t !== undefined && ev.d !== undefined);
+            if (events.length === 0) {
+              console.warn('⛔ Ignored invalid rr_events (after filtering)');
+              return;
+            }
+            const mappedEvents = events.map(ev => ({
+              type: ev.t,
+              timestamp: ev.ts,
+              data: ev.d
+            }));
+
+            if (!initialized) {
+              const container = document.getElementById('player-container');
+              container.innerHTML = '';
+
+              player = new rrwebPlayer({
+                target: container,
+                props: {
+                  events: mappedEvents,
+                  autoPlay: true,
+                  liveMode: true,
+                  UNSAFE_replayCanvas: true,
+                  showController: false,
+                }
+              });
+              initialized = true;
+              return;
+            }
+            // add events one-by-one
+            if (player) {
+              mappedEvents.forEach(ev => {
+                try {
+                  player.addEvent(ev);
+                } catch (err) {
+                  console.warn('addEvent failed', err);
+                }
+              });
+            }
+          } else if (msg.error) {
+            console.error("WS Error:", msg.error);
+          }
+        } catch (err) {
+          console.warn("Invalid WS message", e.data);
+        }
+      };
+    })();
+  </script>
+</body>
+</html>

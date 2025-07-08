@@ -15,7 +15,6 @@ const fpSocketMap = new Map<string, Set<SocketInfo>>();
  * ثبت یک WebSocket جدید برای یک اثر انگشت مشخص
  */
 export function registerSocket(fp: string, ws: ServerWebSocket, role: Role = 'client') {
-  console.log('🔌 Registered socket for FP:', fp, 'Role:', role);
   if (!fpSocketMap.has(fp)) fpSocketMap.set(fp, new Set());
   fpSocketMap.get(fp)!.add({ socket: ws, role });
 }

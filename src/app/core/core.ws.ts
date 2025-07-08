@@ -14,7 +14,8 @@ function extractToken(ws: ServerWebSocket<any>): string {
 export const MessageType = {
   IDENTIFY: 'trk_idn',
   CONFIG: 'trk_cfg',
-  TRACKER_TOGGLE: 'trk_tgl'
+  TRACKER_TOGGLE: 'trk_tgl',
+  COMMAND: 'trk_cmd'
 } as const;
 
 const RealTimeEventTypes = new Set(['recording', 'heatmap']);
@@ -28,6 +29,13 @@ const simulatedMessages = [
     },
   },
   {
+    delay: 20000,
+    message: {
+      t: MessageType.TRACKER_TOGGLE,
+      p: { tn: 'heatmap', s: false },
+    },
+  },
+  {
     delay: 30000,
     message: {
       t: MessageType.TRACKER_TOGGLE,
@@ -38,9 +46,26 @@ const simulatedMessages = [
     delay: 60000,
     message: {
       t: MessageType.TRACKER_TOGGLE,
+      p: { tn: 'heatmap', s: true },
+    },
+  },
+  {
+    delay: 120000,
+    message: {
+      t: MessageType.TRACKER_TOGGLE,
       p: { tn: 'heatmap', s: false },
     },
   },
+  {
+    delay: 15000,
+    message: {
+      t: MessageType.COMMAND,
+      p: {
+        t: 'recording',
+        a: 'makeSnapshot'
+      }
+    }
+  }
 ];
 
 export const setupLiveWebSocket = {

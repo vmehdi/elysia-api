@@ -21,9 +21,6 @@ const eventMap: Record<string, string> = {
   url: 'url',
 };
 
-/**
- * Expands compact common data into full field names.
- */
 function expandCommon(compact: Record<string, any>) {
   const result: Record<string, any> = {};
   for (const key in compact) {
@@ -33,9 +30,6 @@ function expandCommon(compact: Record<string, any>) {
   return result;
 }
 
-/**
- * Expands a compact event object into full field names.
- */
 function expandEvent(event: Record<string, any>) {
   const result: Record<string, any> = {};
   for (const key in event) {
@@ -49,9 +43,6 @@ function expandEvent(event: Record<string, any>) {
   return result;
 }
 
-/**
- * Saves a batch of events from the standard HTTP /t endpoint.
- */
 export async function saveBatchedEvents(payload: any) {
   const { common, events } = payload;
   if (!common || !Array.isArray(events) || events.length === 0) {
@@ -89,13 +80,20 @@ export async function saveBatchedEvents(payload: any) {
   return eventData.length;
 }
 
-/**
- * Saves a single real-time event from the WebSocket handler.
- */
 export async function saveSingleEvent(payload: any) {
-  if (!payload?.fp || !payload?.t) {
+  if (!payload?.fp || !payload?.t || !payload?.p) {
     console.warn("[Ingestion Service] Received invalid single event payload.");
     return 0;
+  }
+
+  let parsedValue = payload.p;
+  if (typeof parsedValue === 'string') {
+    try {
+      parsedValue = JSON.parse(parsedValue);
+    } catch (err) {
+      console.warn("[Ingestion Service] Failed to parse event value as JSON:", err);
+      return 1;
+    }
   }
 
   const visitor = await prisma.visitor.upsert({
@@ -107,16 +105,46 @@ export async function saveSingleEvent(payload: any) {
   await prisma.event.create({
     data: {
       type: payload.t,
-      timestamp: new Date(payload.ts),
+      timestamp: payload.ts ? new Date(payload.ts) : new Date(),
       sequentialId: payload.sid ?? 0,
       orientation: payload.o,
       scrollDepth: payload.sd,
       url: payload.url,
-      value: payload.p,
+      value: parsedValue,
       tabId: payload.tb,
       visitorId: visitor.id,
     }
   });
+
+  const rrEvents = Array.isArray(parsedValue?.rr_events) ? parsedValue.rr_events : [];
+  const snapshot = rrEvents.find((e: any) => e?.t === 2);
+  const meta = rrEvents.find((e: any) => e?.t === 4);
+  const chunks = rrEvents.filter((e: any) => e?.t === 0);
+
+  if (snapshot && meta && chunks.length > 0) {
+    await prisma.recordingStart.upsert({
+      where: {
+        fingerprint_tabId_url: {
+          fingerprint: payload.fp,
+          tabId: payload.tb,
+          url: payload.url
+        }
+      },
+      update: {
+        snapshot,
+        meta,
+        firstChunk: chunks[0]
+      },
+      create: {
+        fingerprint: payload.fp,
+        tabId: payload.tb,
+        url: payload.url,
+        snapshot,
+        meta,
+        firstChunk: chunks[0]
+      }
+    });
+  }
 
   return 1;
 }

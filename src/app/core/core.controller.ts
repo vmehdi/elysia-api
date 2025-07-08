@@ -78,7 +78,6 @@ export const setTrack = async ({
   set: any;
 }) => {
   const receivedCount = await saveBatchedEvents(body);
-  console.log("📌 receivedCount is ⭐->", receivedCount);
   set.status = 201;
   return { status: "success", received: receivedCount };
 };

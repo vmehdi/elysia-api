@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Session Launcher</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: white;
+      text-align: center;
+      padding: 2rem;
+    }
+    input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 400px;
+      max-width: 90%;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      margin-top: 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Live RRWeb Session</h1>
+  <p>Enter visitor fingerprint:</p>
+  <input type="text" id="fpInput" placeholder="e.g. 2d19fb38..." />
+  <br />
+  <button id="launchBtn">Open Player</button>
+
+  <script>
+    document.getElementById('launchBtn').addEventListener('click', () => {
+      const fp = document.getElementById('fpInput').value.trim();
+      if (!fp) {
+        alert("Please enter a fingerprint.");
+        return;
+      }
+
+      const newTab = window.open('', '_blank');
+      if (!newTab) {
+        alert("Popup blocked! Please allow popups for this site.");
+        return;
+      }
+
+      const url = "/play?fp=" + encodeURIComponent(fp);
+      newTab.location.href = url;
+    });
+  </script>
+</body>
+</html>

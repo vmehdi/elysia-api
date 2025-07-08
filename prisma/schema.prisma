@@ -70,7 +70,7 @@ model Organization {
   domains   Domain[]
   customer  Customer?
   createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  updatedAt DateTime  @default(now()) @updatedAt
   deletedAt DateTime?
 }
 
@@ -81,7 +81,7 @@ model Customer {
   organizationId   String       @unique
 
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  updatedAt DateTime  @default(now()) @updatedAt
   deletedAt DateTime?
 }
 
@@ -93,7 +93,7 @@ model Membership {
   organizationId String
 
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  updatedAt DateTime  @default(now()) @updatedAt
   deletedAt DateTime?
 
   @@id([userId, organizationId])
@@ -110,7 +110,7 @@ model DomainRule {
   domain    Domain    @relation(fields: [domainId], references: [id])
   domainId  String
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  updatedAt DateTime  @default(now()) @updatedAt
   deletedAt DateTime?
 }
 
@@ -148,6 +148,7 @@ model Visitor {
   id              String   @id @default(cuid())
   fingerprintHash String   @unique
   createdAt       DateTime @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
 
   events Event[]
 }
@@ -167,4 +168,19 @@ model Event {
   visitor   Visitor @relation(fields: [visitorId], references: [id])
   visitorId String
   createdAt       DateTime @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+}
+
+model RecordingStart {
+  id           String   @id @default(cuid())
+  fingerprint  String   // from visitor
+  tabId        String
+  url          String
+  meta         Json     // type 4
+  snapshot     Json     // type 2
+  firstChunk   Json     // one or more type 0s
+  createdAt    DateTime @default(now())
+
+  @@index([fingerprint, tabId, url])
+  @@unique([fingerprint, tabId, url], name: "fingerprint_tabId_url")
 }

@@ -22,8 +22,6 @@ export const prisma = new PrismaClient()
         DomainRule: true,
         DomainTracker: true,
         Domain: true,
-        Visitor: true,
-        Event: true,
       },
       defaultConfig: {
         field: "deletedAt",
