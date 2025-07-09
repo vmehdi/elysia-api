@@ -40,7 +40,7 @@
         return;
       }
 
-      const ws = new WebSocket("ws://" + location.host + "/play-ws?fp=" + fp);
+      const ws = new WebSocket("wss://" + location.host + "/play-ws?fp=" + fp);
       let player;
       let initialized = false;
 
