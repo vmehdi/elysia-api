@@ -25,7 +25,7 @@ class LogBroadcaster {
 export const logBroadcaster = new LogBroadcaster();
 
 export const liveLoggerPlugin = new Elysia()
-  .get('/logs', () => Bun.file('./public/play.html'))
+  .get('/logs', () => Bun.file('./public/logs.html'))
   .ws('/log-ws', {
     open(ws: any) {
       logBroadcaster.register(ws);
