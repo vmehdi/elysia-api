@@ -3,27 +3,47 @@ import { checkLicense, setTrack } from "./core.controller";
 import { isTrackerAuthenticated } from "@/middleware/track-auth";
 import { t } from "elysia";
 
-const EventPayloadSchema = t.Object({
-  t: t.String(),       // Event type (e.g., 'click', 'impression', etc.)
-  p: t.Unknown(),      // Event payload (varies per type)
-  ts: t.Number(),      // Timestamp (seconds)
-  url: t.String(),     // Current page URL
-  o: t.Optional(t.String()),  // Orientation (e.g., 'landscape')
-  sd: t.Optional(t.Number()), // Scroll depth
-  sid: t.Optional(t.Number()) // Sequential ID
+// Event schema
+export const EventPayloadSchema = t.Object({
+  t: t.String(),               // event type (e.g. 'click', 'keypress')
+  p: t.Unknown(),              // event payload (type-specific)
+  ts: t.Number(),              // timestamp (ms)
+  url: t.String(),             // current URL
+  o: t.Optional(t.String()),   // orientation
+  dp: t.Optional(t.Number()),  // document/page height
+  sd: t.Optional(t.Number()),  // scroll depth
+  sid: t.Optional(t.Number()), // sequential ID
 });
 
-const TrackRequestSchema = t.Object({
-  common: t.Object({
-    fp: t.String(),                   // Fingerprint
-    tb: t.String(),                   // Tab ID
-    b: t.Boolean(),                   // isBot
-    i: t.Boolean(),                   // incognito
-    l: t.String(),                    // language
-    s: t.Object(t.Unknown()),         // screen data
-    h: t.Number(),                    // site height
-    c: t.Array(t.Unknown()),          // cookies
+// Common schema
+export const CommonSchema = t.Object({
+  fp: t.String(),               // fingerprint
+  tb: t.String(),               // tab ID
+  b: t.Boolean(),               // is bot
+  i: t.Boolean(),               // is incognito
+  l: t.String(),                // language
+  o: t.Optional(t.String()),    // orientation
+  dp: t.Optional(t.Number()),   // document height
+  t: t.Optional(t.String()),    // page title
+  s: t.Object({                 // screen size
+    w: t.Number(),
+    h: t.Number(),
   }),
+  v: t.Object({                 // viewport size
+    w: t.Number(),
+    h: t.Number(),
+  }),
+  d: t.Object({                 // document size
+    w: t.Number(),
+    h: t.Number(),
+  }),
+  sd: t.Optional(t.Number()),   // scroll depth
+  c: t.Array(t.Unknown()),      // cookies
+});
+
+// Final schema
+export const TrackRequestSchema = t.Object({
+  common: CommonSchema,
   events: t.Array(EventPayloadSchema),
 });
 

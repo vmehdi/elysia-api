@@ -1,45 +1,29 @@
 import { prisma } from '@/utils/prisma';
 
-const commonMap: Record<string, string> = {
-  fp: 'fingerprint',
-  tb: 'tabId',
-  b: 'isBot',
-  i: 'incognito',
-  l: 'lang',
-  s: 'screen',
-  h: 'siteHeight',
-  c: 'cookies',
-};
 
-const eventMap: Record<string, string> = {
-  t: 'type',
-  p: 'value',
-  ts: 'timestamp',
-  sid: 'sequentialId',
-  o: 'orientation',
-  sd: 'scrollDepth',
-  url: 'url',
-};
+import { FIELD_MAP } from '@/utils/field-map';
 
-function expandCommon(compact: Record<string, any>) {
+function expandKeys(obj: Record<string, any>, context: 'event' | 'common') {
   const result: Record<string, any> = {};
-  for (const key in compact) {
-    const fullKey = commonMap[key] || key;
-    result[fullKey] = compact[key];
-  }
-  return result;
-}
 
-function expandEvent(event: Record<string, any>) {
-  const result: Record<string, any> = {};
-  for (const key in event) {
-    const fullKey = eventMap[key] || key;
-    if (fullKey === 'timestamp') {
-      result[fullKey] = new Date(event[key]);
+  for (const key in obj) {
+    let mapped = (FIELD_MAP as Record<string, string>)[key];
+
+    // Apply context-specific disambiguation if needed
+    if (!mapped && context === 'common') {
+      if (key === 'sd') mapped = 'scrollDepth';
+      else if (key === 't') mapped = 'title';
+    }
+
+    const finalKey = mapped || key;
+
+    if (finalKey === 'timestamp') {
+      result[finalKey] = new Date(obj[key]);
     } else {
-      result[fullKey] = event[key];
+      result[finalKey] = obj[key];
     }
   }
+
   return result;
 }
 
@@ -50,7 +34,7 @@ export async function saveBatchedEvents(payload: any) {
     return 0;
   }
 
-  const fullCommon = expandCommon(common);
+  const fullCommon = expandKeys(common, 'common');
 
   const visitor = await prisma.visitor.upsert({
     where: { fingerprintHash: fullCommon.fingerprint },
@@ -59,7 +43,7 @@ export async function saveBatchedEvents(payload: any) {
   });
 
   const eventData = events.map((e: any) => {
-    const expanded = expandEvent(e);
+    const expanded = expandKeys(e, 'event');
     return {
       type: expanded.type,
       timestamp: expanded.timestamp,
