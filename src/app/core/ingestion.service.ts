@@ -3,27 +3,14 @@ import { prisma } from '@/utils/prisma';
 
 import { FIELD_MAP } from '@/utils/field-map';
 
-function expandKeys(obj: Record<string, any>, context: 'event' | 'common') {
+export function expandKeys(data: Record<string, any>, group: 'common' | 'event') {
+  const map = FIELD_MAP;
+
   const result: Record<string, any> = {};
-
-  for (const key in obj) {
-    let mapped = (FIELD_MAP as Record<string, string>)[key];
-
-    // Apply context-specific disambiguation if needed
-    if (!mapped && context === 'common') {
-      if (key === 'sd') mapped = 'scrollDepth';
-      else if (key === 't') mapped = 'title';
-    }
-
-    const finalKey = mapped || key;
-
-    if (finalKey === 'timestamp') {
-      result[finalKey] = new Date(obj[key]);
-    } else {
-      result[finalKey] = obj[key];
-    }
+  for (const key in data) {
+    const fullKey = Object.entries(map).find(([_, short]) => short === key)?.[0] || key;
+    result[fullKey] = data[key];
   }
-
   return result;
 }
 
