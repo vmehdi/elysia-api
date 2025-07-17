@@ -51,7 +51,7 @@ const coreRouter = new Elysia()
       request.headers.get("x-real-ip") ||
       "none",
   }))
-  .get('/status', () => ({ success: true }))
+  .get("/status", ({ ip }) => ({ success: true, ip }))
   .get(
     '/v/:license',
     checkLicense,
