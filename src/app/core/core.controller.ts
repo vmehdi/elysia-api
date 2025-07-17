@@ -40,6 +40,7 @@ export const checkLicense = async ({
   const config = {
     trackers: domain.trackers.map((t) => t.name),
     stable: ['data-seg-id', 'data-product-id'],
+    keys: ['Enter', 'Tab', 'meta + l'],
     rules: {
       click: domain.rules
         .filter((r) => r.type === 'click')

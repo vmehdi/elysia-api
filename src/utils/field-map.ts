@@ -1,48 +1,45 @@
-export const FIELD_MAP: Record<string, string> = {
+export const FIELD_MAP = {
   // General
   payload: 'p',
   type: 't',
   timestamp: 'ts',
-  sessionId: 'sid',
+  sequentialId: 'sid',
   url: 'url',
   orientation: 'o',
-  siteHeight: 'sd',
+  siteHeight: 'h',
+  scrollDepth: 'sd',
   data: 'd',
+
+  width: 'w',
+  height: 'h',
 
   // Identity
   fingerprint: 'fp',
   bot: 'b',
   tabId: 'tb',
-
-  // Viewport + Screen (HTTP only)
-  screen: 's',      // contains: w, h
-  viewport: 'v',    // contains: w, h
-  scrollDepth: 'dp',
-
   incognito: 'i',
   lang: 'l',
   cookies: 'c',
 
-  // Click
+  // Viewport + Screen (HTTP only)
+  screen: 's',      // { w, h }
+  viewport: 'v',    // { w, h }
+
+  // Click & Path
   rule: 'r',
   path: 'pa',
   tag: 'tg',
   text: 'txt',
   element: 'el',     // contains x, y, w, h
 
-  // Rage container (click + keypress)
+  // Rage / Keypress
   rage: 'ra',
   count: 'c',
   hesitation: 'he',
-
-  // Keypress
   key: 'k',
   code: 'co',
   meta: 'me',
 
-  width: 'w',
-  height: 'h',
-
-  // Visual Data Flag
+  // rrweb
   visualData: 'vd',
 };

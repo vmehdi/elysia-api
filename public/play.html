@@ -48,7 +48,7 @@
         try {
           const msg = JSON.parse(e.data);
           if (msg.type === 'recording') {
-            const rawEvents = msg.data?.rr_events;
+            const rawEvents = msg.data?.vb;
             if (!Array.isArray(rawEvents) || rawEvents.length === 0) {
               console.warn('⛔ Ignored empty rr_events message.');
               return;

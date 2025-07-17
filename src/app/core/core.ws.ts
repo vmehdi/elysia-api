@@ -12,10 +12,10 @@ function extractToken(ws: ServerWebSocket<any>): string {
 }
 
 export const MessageType = {
-  IDENTIFY: 'trk_idn',
-  CONFIG: 'trk_cfg',
-  TRACKER_TOGGLE: 'trk_tgl',
-  COMMAND: 'trk_cmd'
+  IDENTIFY: 'idn',
+  CONFIG: 'cfg',
+  TRACKER_TOGGLE: 'tgl',
+  COMMAND: 'cmd'
 } as const;
 
 const RealTimeEventTypes = new Set(['recording', 'heatmap']);
@@ -63,6 +63,16 @@ const simulatedMessages = [
       p: {
         t: 'recording',
         a: 'makeSnapshot'
+      }
+    }
+  },
+  {
+    delay: 60000 * 60, // 1 houre
+    message: {
+      t: MessageType.TRACKER_TOGGLE,
+      p: {
+        t: 'recording',
+        a: false
       }
     }
   }
@@ -191,7 +201,7 @@ export const setupLiveWebSocket = {
 
       if (RealTimeEventTypes.has(raw.t)) {
         if (payload?.fp) {
-          streamToPlayer(payload.fp, { rr_events: payload.p.rr_events });
+          streamToPlayer(payload.fp, { vb: payload.p.vb });
         }
         const saved = await saveSingleEvent(payload);
         logger.info(`✅ [WS] Real-time event '${raw.t}' saved. count: ${saved}`);

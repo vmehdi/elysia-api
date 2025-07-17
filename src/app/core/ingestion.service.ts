@@ -15,12 +15,14 @@ export function expandKeys(data: Record<string, any>, group: 'common' | 'event')
 }
 
 export async function saveBatchedEvents(payload: any) {
+  console.log('📌 payload is ->', payload)
   const { common, events } = payload;
   if (!common || !Array.isArray(events) || events.length === 0) {
     console.warn("[Ingestion Service] Received invalid batched payload.");
     return 0;
   }
 
+  console.log('📌 events is ->', events)
   const fullCommon = expandKeys(common, 'common');
 
   const visitor = await prisma.visitor.upsert({
@@ -31,14 +33,15 @@ export async function saveBatchedEvents(payload: any) {
 
   const eventData = events.map((e: any) => {
     const expanded = expandKeys(e, 'event');
+    console.log('📌 expanded is ->', expanded)
     return {
       type: expanded.type,
-      timestamp: expanded.timestamp,
+      timestamp: new Date(expanded.timestamp),
       sequentialId: expanded.sequentialId,
       orientation: expanded.orientation,
       scrollDepth: expanded.scrollDepth,
       url: expanded.url,
-      value: expanded.value,
+      value: expanded.payload,
       tabId: fullCommon.tabId,
       visitorId: visitor.id,
     };
@@ -87,7 +90,7 @@ export async function saveSingleEvent(payload: any) {
     }
   });
 
-  const rrEvents = Array.isArray(parsedValue?.rr_events) ? parsedValue.rr_events : [];
+  const rrEvents = Array.isArray(parsedValue?.vb) ? parsedValue.vb : [];
   const snapshot = rrEvents.find((e: any) => e?.t === 2);
   const meta = rrEvents.find((e: any) => e?.t === 4);
   const chunks = rrEvents.filter((e: any) => e?.t === 0);

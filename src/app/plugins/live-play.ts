@@ -25,7 +25,7 @@ export const setupLivePlyer: any = {
 
       if (!visitor) {
         console.warn('[ws] No visitor found for', fp);
-        ws.send(JSON.stringify({ type: 'recording', data: { rr_events: [] } }));
+        ws.send(JSON.stringify({ type: 'recording', data: { vb: [] } }));
         return;
       }
 
@@ -51,7 +51,7 @@ export const setupLivePlyer: any = {
 
       ws.send(JSON.stringify({
         type: 'recording',
-        data: { rr_events: essentialEvents }
+        data: { vb: essentialEvents }
       }));
     } catch (err) {
       console.error("Failed to load initial events:", err);

@@ -33,10 +33,7 @@ export const CommonSchema = t.Object({
     w: t.Number(),
     h: t.Number(),
   }),
-  d: t.Object({                 // document size
-    w: t.Number(),
-    h: t.Number(),
-  }),
+  h: t.Number(),                // site height
   sd: t.Optional(t.Number()),   // scroll depth
   c: t.Array(t.Unknown()),      // cookies
 });

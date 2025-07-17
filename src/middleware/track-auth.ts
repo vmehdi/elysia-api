@@ -4,7 +4,7 @@ export const isTrackerAuthenticated = async ({ jwtTrack, set, request }: any) =>
 
   if (!token) {
     set.status = 401;
-    return { error: "Missing tracking token" };
+    return { error: "Missing token" };
   }
 
   const payload = await jwtTrack.verify(token);
