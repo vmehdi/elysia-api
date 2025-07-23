@@ -1,6 +1,6 @@
 import type { ServerWebSocket } from 'bun';
 import { prisma } from '@/utils/prisma';
-import { saveSingleEvent } from './ingestion.service';
+import { sendToKafka } from '@/utils/kafka-producer';
 import { isEncrypted, decryptPayload } from '@/utils/decryption-service';
 import logger from '@/utils/logger';
 import { saveAuth, getAuth, removeAuth } from '@/utils/wsAuthMap';
@@ -18,7 +18,7 @@ export const MessageType = {
   COMMAND: 'cmd'
 } as const;
 
-const RealTimeEventTypes = new Set(['recording', 'heatmap']);
+const RealTimeEventTypes = new Set(['tr', 'th']);
 
 const simulatedMessages = [
   {
@@ -169,7 +169,7 @@ export const setupLiveWebSocket = {
           keys: ['Enter', 'Escape', 'Tab'],
           rules: {
             click: domain.rules
-              .filter((r) => r.type === 'click')
+              .filter((r) => r.type === 'tc')
               .map((r) => ({
                 name: r.name,
                 css_selector: r.css_selector,
@@ -178,7 +178,7 @@ export const setupLiveWebSocket = {
                   : undefined,
               })),
             impression: domain.rules
-              .filter((r) => r.type === 'impression')
+              .filter((r) => r.type === 'ti')
               .map((r) => ({
                 name: r.name,
                 css_selector: r.css_selector,
@@ -203,8 +203,8 @@ export const setupLiveWebSocket = {
         if (payload?.fp) {
           streamToPlayer(payload.fp, { vb: payload.p.vb });
         }
-        const saved = await saveSingleEvent(payload);
-        logger.info(`✅ [WS] Real-time event '${raw.t}' saved. count: ${saved}`);
+        await sendToKafka('tracking-events', payload);
+        logger.info(`✅ [WS] Real-time event '${raw.t}' sent to Kafka`);
       } else {
         logger.warn(`❓ Unknown or disallowed WebSocket message type: "${raw.t}"`);
       }

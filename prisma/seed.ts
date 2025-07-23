@@ -44,13 +44,13 @@ async function main() {
 
   // 4. Enable full trackers
   const trackers = [
-    'impression',
-    'dnd',
-    'click',
-    'keypress',
-    'heatmap',
-    'recording',
-    'pageload'
+    'ti',
+    'td',
+    'tc',
+    'tk',
+    'th',
+    'tr',
+    'tp'
   ];
 
   const stable = ['data-seg-id', 'data-product-id'];

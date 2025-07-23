@@ -10,6 +10,12 @@ import { jwtTrack } from '@/utils/jwt';
 import { liveLoggerPlugin } from './app/plugins/live-logger';
 import { livePlayerPlugin, setupLivePlyer } from './app/plugins/live-play';
 import { setupLiveWebSocket } from './app/core/core.ws';
+import { initKafkaProducer } from "@/utils/kafka-producer";
+
+(async () => {
+  await initKafkaProducer(); // Connect Kafka Producer on startup
+  console.log("🚀 Kafka Producer Ready");
+})();
 
 const app = new Elysia()
   .use(cors({

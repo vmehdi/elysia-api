@@ -1,5 +1,8 @@
 import { prisma } from "@/utils/prisma";
 import { saveBatchedEvents } from "./ingestion.service";
+import { sendToKafka } from "@/utils/kafka-producer";
+import { decryptPayload } from "@/utils/decryption-service";
+import { transformResult } from "@/utils/helper";
 
 export const checkLicense = async ({
   params,
@@ -77,7 +80,21 @@ export const setTrack = async ({
   body: Record<string, any>;
   set: any;
 }) => {
-  const receivedCount = await saveBatchedEvents(body);
+  const { common, events } = body;
+  if (!common || !Array.isArray(events) || events.length === 0) {
+    set.status = 400;
+    return { error: "Invalid payload" };
+  }
+
+  const processedEvents = await Promise.all(
+    events.map(async (e) => ({
+      ...e,
+      p: await decryptPayload(e.p),
+    }))
+  );
+
+  await sendToKafka("tracking-events", { common, events: processedEvents });
+
   set.status = 201;
-  return { status: "success", received: receivedCount };
+  return { status: "success", received: processedEvents.length };
 };
