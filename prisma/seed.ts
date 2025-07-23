@@ -77,7 +77,7 @@ async function main() {
   const ruleData = [
     ...clickRules.map(rule => ({
       name: rule.name,
-      type: RuleType.click,
+      type: RuleType.tc,
       css_selector: rule.css_selector,
       regex_attribute: rule.regex_selector?.attribute,
       regex_pattern: rule.regex_selector?.pattern,
@@ -85,7 +85,7 @@ async function main() {
     })),
     ...impressionRules.map(rule => ({
       name: rule.name,
-      type: RuleType.impression,
+      type: RuleType.ti,
       css_selector: rule.css_selector,
       regex_attribute: rule.regex_selector?.attribute,
       regex_pattern: rule.regex_selector?.pattern,

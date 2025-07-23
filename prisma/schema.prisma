@@ -14,8 +14,8 @@ enum Role {
 }
 
 enum RuleType {
-  click
-  impression
+  tc
+  ti
 }
 
 model User {

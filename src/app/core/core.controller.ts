@@ -1,7 +1,5 @@
-import type { Context } from 'elysia';
 import { prisma } from "@/utils/prisma";
 import { saveBatchedEvents } from "./ingestion.service";
-import logger from '@/utils/logger';
 
 export const checkLicense = async ({
   params,
@@ -43,7 +41,7 @@ export const checkLicense = async ({
     keys: ['Enter', 'Tab', 'meta + l'],
     rules: {
       click: domain.rules
-        .filter((r) => r.type === 'click')
+        .filter((r) => r.type === 'tc')
         .map((r) => ({
           name: r.name,
           css_selector: r.css_selector,
@@ -52,7 +50,7 @@ export const checkLicense = async ({
             : undefined,
         })),
       impression: domain.rules
-        .filter((r) => r.type === 'impression')
+        .filter((r) => r.type === 'ti')
         .map((r) => ({
           name: r.name,
           css_selector: r.css_selector,
