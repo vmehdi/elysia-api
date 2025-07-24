@@ -7,11 +7,9 @@
     "start": "bun run dist/index.ts",
     "seed": "bunx prisma db seed",
     "prisma:push": "bunx prisma db push",
-    "prisma:reset": "bunx prisma db push --force-reset"
-  },
-  "prisma": {
-    "seed": "bun run prisma/seed.js",
-    "seed-init": "bun run prisma/seed-init.js"
+    "prisma:reset": "bunx prisma db push --force-reset",
+    "prisma:seed-init": "bbun run prisma/seed-init.js",
+    "prisma:seed": "bun run prisma/seed.js"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.3.3",

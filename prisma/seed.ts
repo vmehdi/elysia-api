@@ -37,7 +37,7 @@ async function main() {
       name: 'My Full Tracker Website',
       url: 'https://demo.segmentaim.com/v5/',
       organizationId: organization.id,
-      trackerVersion: '0.1.3',
+      trackerVersion: '0',
     },
   });
   console.log(`✅ Created domain: ${domain.name} with license: ${domain.uniqueId}`);

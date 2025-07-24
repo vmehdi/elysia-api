@@ -25,35 +25,35 @@ const simulatedMessages = [
     delay: 10000,
     message: {
       t: MessageType.TRACKER_TOGGLE,
-      p: { tn: 'recording', s: true },
+      p: { tn: 'tr', s: true },
     },
   },
   {
     delay: 20000,
     message: {
       t: MessageType.TRACKER_TOGGLE,
-      p: { tn: 'heatmap', s: false },
+      p: { tn: 'th', s: false },
     },
   },
   {
     delay: 30000,
     message: {
       t: MessageType.TRACKER_TOGGLE,
-      p: { tn: 'dnd', s: false },
+      p: { tn: 'td', s: false },
     },
   },
   {
     delay: 60000,
     message: {
       t: MessageType.TRACKER_TOGGLE,
-      p: { tn: 'heatmap', s: true },
+      p: { tn: 'th', s: true },
     },
   },
   {
     delay: 120000,
     message: {
       t: MessageType.TRACKER_TOGGLE,
-      p: { tn: 'heatmap', s: false },
+      p: { tn: 'th', s: false },
     },
   },
   {
@@ -61,7 +61,7 @@ const simulatedMessages = [
     message: {
       t: MessageType.COMMAND,
       p: {
-        t: 'recording',
+        t: 'tr',
         a: 'makeSnapshot'
       }
     }
@@ -71,7 +71,7 @@ const simulatedMessages = [
     message: {
       t: MessageType.TRACKER_TOGGLE,
       p: {
-        t: 'recording',
+        t: 'tr',
         a: false
       }
     }
