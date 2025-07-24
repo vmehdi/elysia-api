@@ -20,8 +20,10 @@ RUN apt-get update -y && apt-get install -y openssl
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/public ./public
 COPY package.json bun.lock ./
 
 ENV NODE_ENV=production
 EXPOSE 3003
-CMD ["bun", "run", "dist/index.ts"]
+CMD ["bun", "run", "dist/index.js"]
