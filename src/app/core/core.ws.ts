@@ -134,8 +134,15 @@ export const setupLiveWebSocket = {
       const auth = getAuth(token);
 
       let payload = raw;
-      if (isEncrypted(payload)) {
-        payload = await decryptPayload(payload);
+      if (raw?.p && isEncrypted(raw.p)) {
+        try {
+          const decrypted = await decryptPayload(raw.p);
+          payload = { ...raw, p: decrypted };
+        } catch (err) {
+          logger.error('❌ Failed to decrypt WebSocket payload', err);
+          ws.send(JSON.stringify({ t: 'error', p: { message: 'Decryption failed' } }));
+          return;
+        }
       }
 
       if (raw.t === MessageType.IDENTIFY) {
