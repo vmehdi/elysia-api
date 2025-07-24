@@ -1,7 +1,15 @@
+
 import { Elysia } from "elysia";
 import { checkLicense, setTrack } from "./core.controller";
 import { isTrackerAuthenticated } from "@/middleware/track-auth";
 import { t } from "elysia";
+
+import path from "path";
+import fs from "fs";
+const packageJsonPath = path.resolve(__dirname, "../../../package.json");
+const packageData = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+const appVersion = packageData.version || "unknown";
+
 
 // Event schema
 export const EventPayloadSchema = t.Object({
@@ -51,7 +59,7 @@ const coreRouter = new Elysia()
       request.headers.get("x-real-ip") ||
       "none",
   }))
-  .get("/status", ({ ip }) => ({ success: true, ip }))
+  .get("/status", ({ ip }) => ({ success: true, ip, version: appVersion }))
   .get(
     '/v/:license',
     checkLicense,
