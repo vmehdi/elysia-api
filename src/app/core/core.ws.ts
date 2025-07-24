@@ -133,18 +133,6 @@ export const setupLiveWebSocket = {
       const token = extractToken(ws);
       const auth = getAuth(token);
 
-      let payload = raw;
-      if (raw?.p && isEncrypted(raw.p)) {
-        try {
-          const decrypted = await decryptPayload(raw.p);
-          payload = { ...raw, p: decrypted };
-        } catch (err) {
-          logger.error('❌ Failed to decrypt WebSocket payload', err);
-          ws.send(JSON.stringify({ t: 'error', p: { message: 'Decryption failed' } }));
-          return;
-        }
-      }
-
       if (raw.t === MessageType.IDENTIFY) {
 
         if (!auth) {
@@ -158,7 +146,7 @@ export const setupLiveWebSocket = {
           return;
         }
 
-        if (payload?.fp) registerSocket(payload.fp, ws, 'client');
+        if (raw?.fp) registerSocket(raw.fp, ws, 'client');
 
         const domain = await prisma.domain.findUnique({
           where: { id: auth.domainId },
@@ -207,10 +195,18 @@ export const setupLiveWebSocket = {
       }
 
       if (RealTimeEventTypes.has(raw.t)) {
-        if (payload?.fp) {
-          streamToPlayer(payload.fp, { vb: payload.p.vb });
+        let livePayload = raw;
+        if (raw?.p && isEncrypted(raw.p)) {
+          try {
+            livePayload = { ...raw, p: await decryptPayload(raw.p) };
+          } catch (err) {
+            logger.error('❌ Failed to decrypt payload for live streaming', err);
+          }
         }
-        await sendToKafka('tracking-events', payload);
+        if (livePayload?.fp) {
+          streamToPlayer(livePayload.fp, { vb: livePayload.p.vb });
+        }
+        await sendToKafka('tracking-events', raw);
         logger.info(`✅ [WS] Real-time event '${raw.t}' sent to Kafka`);
       } else {
         logger.warn(`❓ Unknown or disallowed WebSocket message type: "${raw.t}"`);

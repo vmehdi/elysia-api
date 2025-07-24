@@ -43,7 +43,7 @@ export const checkLicense = async ({
     stable: ['data-seg-id', 'data-product-id'],
     keys: ['Enter', 'Tab', 'meta + l'],
     rules: {
-      click: domain.rules
+      tc: domain.rules
         .filter((r) => r.type === 'tc')
         .map((r) => ({
           name: r.name,
@@ -52,7 +52,7 @@ export const checkLicense = async ({
             ? { attribute: r.regex_attribute, pattern: r.regex_pattern }
             : undefined,
         })),
-      impression: domain.rules
+      ti: domain.rules
         .filter((r) => r.type === 'ti')
         .map((r) => ({
           name: r.name,

@@ -6,8 +6,20 @@ const kafka = new Kafka({
 });
 
 const producer = kafka.producer();
+const admin = kafka.admin();
 
 export async function initKafkaProducer() {
+  await admin.connect();
+  await admin.createTopics({
+    topics: [{
+      topic: 'tracking-events',
+      numPartitions: 3,
+      replicationFactor: 1
+    }],
+    waitForLeaders: true
+  });
+  await admin.disconnect();
+
   await producer.connect();
   console.log("✅ Kafka Producer connected");
 }
