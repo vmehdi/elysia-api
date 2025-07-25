@@ -7,14 +7,16 @@ import { AppRoutes } from '@/app/app.router';
 import { transformResult } from '@/utils/helper';
 import logger from '@/utils/logger';
 import { jwtTrack } from '@/utils/jwt';
-import { liveLoggerPlugin } from './app/plugins/live-logger';
-import { livePlayerPlugin, setupLivePlyer } from './app/plugins/live-play';
-import { setupLiveWebSocket } from './app/core/core.ws';
+import { liveLoggerPlugin } from '@/app/plugins/live-logger';
+import { livePlayerPlugin, setupLivePlyer } from '@/app/plugins/live-play';
+import { setupLiveWebSocket } from '@/app/core/core.ws';
 import { initKafkaProducer } from "@/utils/kafka-producer";
+import { startKafkaConsumer } from '@/utils/kafka-consumer';
 
 (async () => {
-  await initKafkaProducer(); // Connect Kafka Producer on startup
-  console.log("🚀 Kafka Producer Ready");
+  await initKafkaProducer();
+  await startKafkaConsumer();
+  console.log("🚀 Kafka Producer & Consumer Ready");
 })();
 
 const app = new Elysia()

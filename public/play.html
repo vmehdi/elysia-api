@@ -50,12 +50,12 @@
           if (msg.type === 'recording') {
             const rawEvents = msg.data?.vb;
             if (!Array.isArray(rawEvents) || rawEvents.length === 0) {
-              console.warn('⛔ Ignored empty rr_events message.');
+              console.warn('⛔ Ignored empty vb message.');
               return;
             }
             const events = rawEvents.filter(ev => ev && ev.t !== undefined && ev.d !== undefined);
             if (events.length === 0) {
-              console.warn('⛔ Ignored invalid rr_events (after filtering)');
+              console.warn('⛔ Ignored invalid vb (after filtering)');
               return;
             }
             const mappedEvents = events.map(ev => ({
