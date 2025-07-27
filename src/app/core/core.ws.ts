@@ -5,6 +5,7 @@ import { isEncrypted, decryptPayload } from '@/utils/decryption-service';
 import logger from '@/utils/logger';
 import { saveAuth, getAuth, removeAuth } from '@/utils/wsAuthMap';
 import { registerSocket, unregisterSocket, getSocketsByFingerprint, getAllFingerprints } from '@/utils/socket-fingerprint-map';
+import { getFingerprintBySocket } from '@/utils/socket-fingerprint-map';
 import { streamToPlayer } from '@/app/plugins/live-play';
 
 type AuthData = { domainId: string; fingerprint?: string };
@@ -215,9 +216,9 @@ export const setupLiveWebSocket = {
         if (!livePayload.fp) {
           livePayload.fp = auth?.fingerprint;
           if (!livePayload.fp) {
-            const connectedFps = getAllFingerprints();
-            if (connectedFps.length > 0) {
-              livePayload.fp = connectedFps[0]; // pick the first active socket fp
+            const fpFromSocket = getFingerprintBySocket(ws);
+            if (fpFromSocket) {
+              livePayload.fp = fpFromSocket;
             }
           }
         }

@@ -75,3 +75,12 @@ export function getActiveSocketCount(): number {
 export function getAllFingerprints(): string[] {
   return [...fpSocketMap.keys()];
 }
+
+export function getFingerprintBySocket(ws: ServerWebSocket): string | null {
+  for (const [fp, set] of fpSocketMap.entries()) {
+    for (const info of set) {
+      if (info.socket === ws) return fp;
+    }
+  }
+  return null;
+}
