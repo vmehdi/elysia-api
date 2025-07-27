@@ -4,7 +4,7 @@ import { sendToKafka } from '@/utils/kafka-producer';
 import { isEncrypted, decryptPayload } from '@/utils/decryption-service';
 import logger from '@/utils/logger';
 import { saveAuth, getAuth, removeAuth } from '@/utils/wsAuthMap';
-import { registerSocket, unregisterSocket } from '@/utils/socket-fingerprint-map';
+import { registerSocket, unregisterSocket, getSocketsByFingerprint, getAllFingerprints } from '@/utils/socket-fingerprint-map';
 import { streamToPlayer } from '@/app/plugins/live-play';
 
 type AuthData = { domainId: string; fingerprint?: string };
@@ -152,6 +152,9 @@ export const setupLiveWebSocket = {
         }
 
         if (raw?.fp) registerSocket(raw.fp, ws, 'client');
+        if (raw?.fp) {
+          saveAuth(token, { domainId: auth.domainId, fingerprint: raw.fp });
+        }
 
         const domain = await prisma.domain.findUnique({
           where: { id: auth.domainId },
@@ -208,13 +211,20 @@ export const setupLiveWebSocket = {
             logger.error('❌ Failed to decrypt payload for live streaming', err);
           }
         }
-        // Attach fingerprint from wsAuthMap if missing
-        if (!livePayload.fp && auth?.fingerprint) {
-          livePayload.fp = auth.fingerprint;
+        // Try to attach fingerprint from wsAuthMap or active socket mapping
+        if (!livePayload.fp) {
+          livePayload.fp = auth?.fingerprint;
+          if (!livePayload.fp) {
+            const connectedFps = getAllFingerprints();
+            if (connectedFps.length > 0) {
+              livePayload.fp = connectedFps[0]; // pick the first active socket fp
+            }
+          }
         }
         if (livePayload?.fp) {
           streamToPlayer(livePayload.fp, { vb: livePayload.p.vb });
         }
+        logger.info("🔍 Final WS event to Kafka:", livePayload);
         await sendToKafka('tracking-events', livePayload);
         logger.info(`✅ [WS] Real-time event '${livePayload.t}' sent to Kafka`);
       } else {
