@@ -4,7 +4,7 @@ import { streamToPlayer } from '@/app/plugins/live-play';
 
 const kafka = new Kafka({
   clientId: 'segmentaim-backend-consumer',
-  brokers: [process.env.KAFKA_BROKER || 'kafka:9092'],
+  brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
 });
 
 const consumer = kafka.consumer({ groupId: 'live-player-group' });

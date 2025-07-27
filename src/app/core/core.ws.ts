@@ -7,6 +7,8 @@ import { saveAuth, getAuth, removeAuth } from '@/utils/wsAuthMap';
 import { registerSocket, unregisterSocket } from '@/utils/socket-fingerprint-map';
 import { streamToPlayer } from '@/app/plugins/live-play';
 
+type AuthData = { domainId: string; fingerprint?: string };
+
 function extractToken(ws: ServerWebSocket<any>): string {
   return (ws.data as any)?.query?.token || '';
 }
@@ -96,6 +98,9 @@ export const setupLiveWebSocket = {
     }
 
     saveAuth(token, { domainId: payload.domainId });
+    if (query?.fp) {
+      saveAuth(token, { domainId: payload.domainId, fingerprint: query.fp });
+    }
   },
 
   open: async (ws: ServerWebSocket<any>) => {
@@ -131,7 +136,7 @@ export const setupLiveWebSocket = {
   async message(ws: ServerWebSocket<any>, raw: any) {
     try {
       const token = extractToken(ws);
-      const auth = getAuth(token);
+      const auth = getAuth(token) as AuthData | undefined;
 
       if (raw.t === MessageType.IDENTIFY) {
 
@@ -203,11 +208,15 @@ export const setupLiveWebSocket = {
             logger.error('❌ Failed to decrypt payload for live streaming', err);
           }
         }
+        // Attach fingerprint from wsAuthMap if missing
+        if (!livePayload.fp && auth?.fingerprint) {
+          livePayload.fp = auth.fingerprint;
+        }
         if (livePayload?.fp) {
           streamToPlayer(livePayload.fp, { vb: livePayload.p.vb });
         }
-        await sendToKafka('tracking-events', raw);
-        logger.info(`✅ [WS] Real-time event '${raw.t}' sent to Kafka`);
+        await sendToKafka('tracking-events', livePayload);
+        logger.info(`✅ [WS] Real-time event '${livePayload.t}' sent to Kafka`);
       } else {
         logger.warn(`❓ Unknown or disallowed WebSocket message type: "${raw.t}"`);
       }

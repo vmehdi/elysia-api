@@ -8,7 +8,7 @@
     "seed": "bunx prisma db seed",
     "prisma:push": "bunx prisma db push",
     "prisma:reset": "bunx prisma db push --force-reset",
-    "prisma:seed-init": "bbun run prisma/seed-init.js",
+    "prisma:seed-init": "bun run prisma/seed-init.js",
     "prisma:seed": "bun run prisma/seed.js"
   },
   "dependencies": {
