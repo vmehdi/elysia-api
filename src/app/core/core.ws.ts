@@ -4,11 +4,8 @@ import { sendToKafka } from '@/utils/kafka-producer';
 import { isEncrypted, decryptPayload } from '@/utils/decryption-service';
 import logger from '@/utils/logger';
 import { saveAuth, getAuth, removeAuth } from '@/utils/wsAuthMap';
-import { registerSocket, unregisterSocket, getSocketsByFingerprint, getAllFingerprints } from '@/utils/socket-fingerprint-map';
-import { getFingerprintBySocket } from '@/utils/socket-fingerprint-map';
+import { registerSocket, unregisterSocket } from '@/utils/socket-fingerprint-map';
 import { streamToPlayer } from '@/app/plugins/live-play';
-
-type AuthData = { domainId: string; fingerprint?: string };
 
 function extractToken(ws: ServerWebSocket<any>): string {
   return (ws.data as any)?.query?.token || '';
@@ -99,9 +96,6 @@ export const setupLiveWebSocket = {
     }
 
     saveAuth(token, { domainId: payload.domainId });
-    if (query?.fp) {
-      saveAuth(token, { domainId: payload.domainId, fingerprint: query.fp });
-    }
   },
 
   open: async (ws: ServerWebSocket<any>) => {
@@ -137,7 +131,7 @@ export const setupLiveWebSocket = {
   async message(ws: ServerWebSocket<any>, raw: any) {
     try {
       const token = extractToken(ws);
-      const auth = getAuth(token) as AuthData | undefined;
+      const auth = getAuth(token);
 
       if (raw.t === MessageType.IDENTIFY) {
 
@@ -153,9 +147,6 @@ export const setupLiveWebSocket = {
         }
 
         if (raw?.fp) registerSocket(raw.fp, ws, 'client');
-        if (raw?.fp) {
-          saveAuth(token, { domainId: auth.domainId, fingerprint: raw.fp });
-        }
 
         const domain = await prisma.domain.findUnique({
           where: { id: auth.domainId },
@@ -212,22 +203,11 @@ export const setupLiveWebSocket = {
             logger.error('❌ Failed to decrypt payload for live streaming', err);
           }
         }
-        // Try to attach fingerprint from wsAuthMap or active socket mapping
-        if (!livePayload.fp) {
-          livePayload.fp = auth?.fingerprint;
-          if (!livePayload.fp) {
-            const fpFromSocket = getFingerprintBySocket(ws);
-            if (fpFromSocket) {
-              livePayload.fp = fpFromSocket;
-            }
-          }
-        }
         if (livePayload?.fp) {
           streamToPlayer(livePayload.fp, { vb: livePayload.p.vb });
         }
-        logger.info("🔍 Final WS event to Kafka:", livePayload);
-        await sendToKafka('tracking-events', livePayload);
-        logger.info(`✅ [WS] Real-time event '${livePayload.t}' sent to Kafka`);
+        await sendToKafka('tracking-events', raw);
+        logger.info(`✅ [WS] Real-time event '${raw.t}' sent to Kafka`);
       } else {
         logger.warn(`❓ Unknown or disallowed WebSocket message type: "${raw.t}"`);
       }
