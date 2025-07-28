@@ -1,4 +1,5 @@
 import { IS_ENCRYPTION_ENABLED, SEG_FINGERPRINT_SECRET } from '@/app/config';
+import { gunzipSync } from 'fflate';
 
 /**
  * Check if payload has encrypted structure (versioned)
@@ -30,16 +31,7 @@ const getAesKey = async (): Promise<CryptoKey> => {
 };
 
 /**
- * Decompress Brotli (using built-in TextDecoder)
- */
-const brotliDecompress = (compressed: Uint8Array): Uint8Array => {
-  // Node 18+ supports Brotli via zlib. In browsers, use CompressionStream API or custom lib.
-  const zlib = require('zlib');
-  return zlib.brotliDecompressSync(compressed);
-};
-
-/**
- * Decrypt + decompress AES-GCM + Brotli payload
+ * Decrypt + decompress AES-GCM + gzip payload
  */
 export const decryptPayload = async (payload: any): Promise<any> => {
   if (!IS_ENCRYPTION_ENABLED || !isEncrypted(payload)) return payload;
@@ -47,7 +39,7 @@ export const decryptPayload = async (payload: any): Promise<any> => {
   const version = payload.v ?? 1;
 
   try {
-    if (version === 3) {
+    if (version === 2) {
       const iv = fromBase64(payload.iv);
       const encrypted = fromBase64(payload.data);
       const key = await getAesKey();
@@ -58,7 +50,7 @@ export const decryptPayload = async (payload: any): Promise<any> => {
         encrypted
       );
 
-      const decompressed = brotliDecompress(new Uint8Array(decrypted));
+      const decompressed = gunzipSync(new Uint8Array(decrypted));
       return JSON.parse(new TextDecoder().decode(decompressed));
     }
 
