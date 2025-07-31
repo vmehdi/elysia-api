@@ -166,12 +166,12 @@ export const setupLiveWebSocket = {
         saveSessionContext(token, {
           ...(sessionContext || {}),
           domainId: sessionContext?.domainId || payload?.domainId || '',
-          fingerprint: raw.fp || sessionContext?.fingerprint || null,
-          tb: raw.tb || sessionContext?.tb || null,
-          url: raw.url || sessionContext?.url || null,
-          re: raw.rf || sessionContext?.re || null,
-          s: raw.s || sessionContext?.s || null,
-          l: raw.l || sessionContext?.l || null
+          fingerprint: raw.p.fp || sessionContext?.fingerprint || null,
+          tb: raw.p.tb || sessionContext?.tb || null,
+          url: raw.p.url || sessionContext?.url || null,
+          re: raw.p.rf || sessionContext?.re || null,
+          s: raw.p.s || sessionContext?.s || null,
+          l: raw.p.l || sessionContext?.l || null,
         });
 
         if (!sessionContext) {
