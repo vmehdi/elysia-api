@@ -1,6 +1,7 @@
 import { prisma } from "@/utils/prisma";
 import { sendToKafka } from "@/utils/kafka-producer";
 import { decryptPayload } from "@/utils/decryption-service";
+import { enrichEvent } from "@/utils/enrich-event";
 
 export const checkLicense = async ({
   params,
@@ -72,12 +73,11 @@ export const checkLicense = async ({
   };
 };
 
-export const setTrack = async ({
-  body,
-  set,
-}: {
+export const setTrack = async ({ body, set, request, ip, }: {
   body: Record<string, any>;
   set: any;
+  request: any;
+  ip: string;
 }) => {
   const { common, events } = body;
   if (!common || !Array.isArray(events) || events.length === 0) {
@@ -91,8 +91,9 @@ export const setTrack = async ({
       p: await decryptPayload(e.p),
     }))
   );
-
-  await sendToKafka("tracking-events", { common, events: processedEvents });
+  
+  const enrichedPayload = enrichEvent({ ...common, events: processedEvents }, { ip, headers: request.headers });
+  await sendToKafka("tracking-events", enrichedPayload);
 
   set.status = 201;
   return { status: "success", received: processedEvents.length };
