@@ -1,8 +1,6 @@
 import { prisma } from "@/utils/prisma";
-import { saveBatchedEvents } from "./ingestion.service";
 import { sendToKafka } from "@/utils/kafka-producer";
 import { decryptPayload } from "@/utils/decryption-service";
-import { transformResult } from "@/utils/helper";
 
 export const checkLicense = async ({
   params,
@@ -62,6 +60,7 @@ export const checkLicense = async ({
             : undefined,
         })),
     },
+    ex: (domain as any).extraOptions ?? { pr: false, cl: true },
   };
 
   return {

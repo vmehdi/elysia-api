@@ -38,6 +38,7 @@ async function main() {
       url: 'https://demo.segmentaim.com/v5/',
       organizationId: organization.id,
       trackerVersion: '0',
+      extraOptions: { pr: false, cl: true },
     },
   });
   console.log(`✅ Created domain: ${domain.name} with license: ${domain.uniqueId}`);
