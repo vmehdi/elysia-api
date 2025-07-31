@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import type { ServerWebSocket } from 'bun';
 import { prisma } from '@/utils/prisma';
 import { sendToKafka } from '@/utils/kafka-producer';
@@ -6,6 +7,7 @@ import logger from '@/utils/logger';
 import { saveAuth, getAuth, removeAuth } from '@/utils/wsAuthMap';
 import { registerSocket, unregisterSocket } from '@/utils/socket-fingerprint-map';
 import { streamToPlayer } from '@/app/plugins/live-play';
+import { enrichEvent } from '@/utils/enrich-event';
 
 function extractToken(ws: ServerWebSocket<any>): string {
   return (ws.data as any)?.query?.token || '';
@@ -21,13 +23,13 @@ export const MessageType = {
 const RealTimeEventTypes = new Set(['tr', 'th']);
 
 const simulatedMessages = [
-  {
-    delay: 10000,
-    message: {
-      t: MessageType.TRACKER_TOGGLE,
-      p: { tn: 'tr', s: true },
-    },
-  },
+  // {
+  //   delay: 10000,
+  //   message: {
+  //     t: MessageType.TRACKER_TOGGLE,
+  //     p: { tn: 'tr', s: true },
+  //   },
+  // },
   {
     delay: 20000,
     message: {
@@ -56,46 +58,56 @@ const simulatedMessages = [
       p: { tn: 'th', s: false },
     },
   },
-  {
-    delay: 15000,
-    message: {
-      t: MessageType.COMMAND,
-      p: {
-        t: 'tr',
-        a: 'makeSnapshot'
-      }
-    }
-  },
-  {
-    delay: 60000 * 60, // 1 houre
-    message: {
-      t: MessageType.TRACKER_TOGGLE,
-      p: {
-        t: 'tr',
-        a: false
-      }
-    }
-  }
+  // {
+  //   delay: 15000,
+  //   message: {
+  //     t: MessageType.COMMAND,
+  //     p: {
+  //       t: 'tr',
+  //       a: 'makeSnapshot'
+  //     }
+  //   }
+  // },
+  // {
+  //   delay: 60000 * 60, // 1 houre
+  //   message: {
+  //     t: MessageType.TRACKER_TOGGLE,
+  //     p: {
+  //       t: 'tr',
+  //       a: false
+  //     }
+  //   }
+  // }
 ];
 
 export const setupLiveWebSocket = {
-  beforeHandle: async ({ query, jwtTrack, ws }: any) => {
+  beforeHandle: async ({ query, jwtTrack, request }: any) => {
     const token = query?.token;
 
     if (!token) {
-      ws.send(JSON.stringify({ t: 'error', p: { message: 'Missing token' } }));
-      ws.close();
-      return;
+      throw new Error('Missing token');
     }
 
     const payload = await jwtTrack.verify(token);
     if (!payload?.domainId || payload.type !== 'TRACKING_TOKEN') {
-      ws.send(JSON.stringify({ t: 'error', p: { message: 'Invalid token' } }));
-      ws.close();
-      return;
+      throw new Error('Invalid token');
     }
 
-    saveAuth(token, { domainId: payload.domainId });
+    // Extract headers after verifying token
+    const ua = request.headers.get("user-agent") || null;
+    const re = request.headers.get("referer") || null;
+    const ip =
+      request.headers.get("x-forwarded-for") ||
+      request.headers.get("x-real-ip") ||
+      request.ip ||
+      null;
+
+    saveAuth(token, { 
+      domainId: payload.domainId,
+      ip,
+      ua,
+      re
+    });
   },
 
   open: async (ws: ServerWebSocket<any>) => {
@@ -206,7 +218,11 @@ export const setupLiveWebSocket = {
         if (livePayload?.fp) {
           streamToPlayer(livePayload.fp, { vb: livePayload.p.vb });
         }
-        await sendToKafka('tracking-events', raw);
+        const enrichedPayload = enrichEvent(raw, { 
+          ip: auth?.ip || undefined, 
+          headers: { "user-agent": auth?.ua, "referer": auth?.re } 
+        });
+        await sendToKafka('tracking-events', enrichedPayload);
         logger.info(`✅ [WS] Real-time event '${raw.t}' sent to Kafka`);
       } else {
         logger.warn(`❓ Unknown or disallowed WebSocket message type: "${raw.t}"`);

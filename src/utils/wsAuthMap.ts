@@ -1,6 +1,6 @@
-const authMap = new Map<string, { domainId: string }>();
+const authMap = new Map<string, { domainId: string; fingerprint?: string; ip?: string | null; ua?: string | null; re?: string | null }>();
 
-export const saveAuth = (token: string, data: { domainId: string, fingerprint?: string }) => {
+export const saveAuth = (token: string, data: { domainId: string; fingerprint?: string; ip?: string | null; ua?: string | null; re?: string | null }) => {
   authMap.set(token, data);
 };
 
