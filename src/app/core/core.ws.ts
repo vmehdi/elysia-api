@@ -4,7 +4,7 @@ import { prisma } from '@/utils/prisma';
 import { sendToKafka } from '@/utils/kafka-producer';
 import { isEncrypted, decryptPayload } from '@/utils/decryption-service';
 import logger from '@/utils/logger';
-import { saveAuth, getAuth, removeAuth } from '@/utils/wsAuthMap';
+import { saveSessionContext, getSessionContext, removeSessionContext } from '@/utils/wsSessionStore';
 import { registerSocket, unregisterSocket } from '@/utils/socket-fingerprint-map';
 import { streamToPlayer } from '@/app/plugins/live-play';
 import { enrichEvent } from '@/utils/enrich-event';
@@ -102,7 +102,7 @@ export const setupLiveWebSocket = {
       request.ip ||
       null;
 
-    saveAuth(token, {
+    saveSessionContext(token, {
       domainId: payload.domainId,
       ip,
       ua,
@@ -136,23 +136,36 @@ export const setupLiveWebSocket = {
   close(ws: ServerWebSocket<any>) {
     const token = extractToken(ws);
     logger.info('❌ WebSocket connection closed');
-    removeAuth(token);
+    removeSessionContext(token);
     unregisterSocket(ws);
   },
 
   async message(ws: ServerWebSocket<any>, raw: any) {
     const token = extractToken(ws);
-    const auth = getAuth(token);
+    const sessionContext = getSessionContext(token);
     try {
 
       if (raw.t === MessageType.IDENTIFY) {
 
-        if (!auth) {
+        if (sessionContext?.domainId) {
+          saveSessionContext(token, {
+            ...sessionContext,
+            domainId: sessionContext.domainId,
+            fingerprint: raw.fp || sessionContext.fingerprint,
+            tb: raw.tb || sessionContext.tb || null,
+            url: raw.url || sessionContext.url || null,
+            re: raw.rf || sessionContext.re || null,
+            s: raw.s || sessionContext.s || null,
+            l: raw.l || sessionContext.l || null
+          });
+        }
+
+        if (!sessionContext) {
           ws.send(JSON.stringify({ t: 'warn', p: { message: 'Auth not ready, retrying...' } }));
           return;
         }
 
-        if (!auth?.domainId) {
+        if (!sessionContext?.domainId) {
           ws.send(JSON.stringify({ t: 'error', p: { message: 'Missing domain ID' } }));
           ws.close();
           return;
@@ -161,7 +174,7 @@ export const setupLiveWebSocket = {
         if (raw?.fp) registerSocket(raw.fp, ws, 'client');
 
         const domain = await prisma.domain.findUnique({
-          where: { id: auth.domainId },
+          where: { id: sessionContext.domainId },
           include: { rules: true, trackers: true },
         });
 
@@ -218,10 +231,16 @@ export const setupLiveWebSocket = {
         if (livePayload?.fp) {
           streamToPlayer(livePayload.fp, { vb: livePayload.p.vb });
         }
-        const enrichedPayload = enrichEvent(raw, {
-          ip: auth?.ip || undefined,
-          headers: { "user-agent": auth?.ua, "referer": auth?.re }
-        });
+        const enrichedPayload = {
+          ...enrichEvent(raw, {
+            ip: sessionContext?.ip || undefined,
+            headers: { "user-agent": sessionContext?.ua, "referer": sessionContext?.re }
+          }),
+          tb: sessionContext?.tb || null,
+          url: sessionContext?.url || null,
+          s: sessionContext?.s || null,
+          l: sessionContext?.l || null
+        };
         await sendToKafka('tracking-events', enrichedPayload);
         logger.info(`✅ [WS] Real-time event '${raw.t}' sent to Kafka`);
       } else {
@@ -230,7 +249,7 @@ export const setupLiveWebSocket = {
     } catch (error) {
       logger.error(`🚨 WS message error: ${error}`);
       // logger.error(`RAW: ${raw}`);
-      logger.error(`AUTH: ${auth}`);
+      logger.error(`AUTH: ${sessionContext}`);
     }
   }
 };

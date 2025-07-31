@@ -42,4 +42,8 @@ export const FIELD_MAP = {
 
   // rrweb
   visualData: 'vd',
+  props: 'pr',
+
+  userAgent: 'ua',
+  referrer: 're'
 };
