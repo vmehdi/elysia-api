@@ -4,8 +4,8 @@ export function enrichEvent(payload: any, meta: { ip?: string; headers?: any }) 
     ...payload,
     eid: crypto.randomUUID(),
     ip: meta.ip || null,
-    ua: meta.headers?.["user-agent"] || null,
-    re: meta.headers?.["referer"] || null,
+    ua: meta.headers?.get("user-agent") || null,
+    re: meta.headers?.get("referer") || null,
     tss: Date.now(),
   };
 }
