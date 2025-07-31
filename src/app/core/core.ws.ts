@@ -102,7 +102,7 @@ export const setupLiveWebSocket = {
       request.ip ||
       null;
 
-    saveAuth(token, { 
+    saveAuth(token, {
       domainId: payload.domainId,
       ip,
       ua,
@@ -141,9 +141,9 @@ export const setupLiveWebSocket = {
   },
 
   async message(ws: ServerWebSocket<any>, raw: any) {
+    const token = extractToken(ws);
+    const auth = getAuth(token);
     try {
-      const token = extractToken(ws);
-      const auth = getAuth(token);
 
       if (raw.t === MessageType.IDENTIFY) {
 
@@ -218,9 +218,9 @@ export const setupLiveWebSocket = {
         if (livePayload?.fp) {
           streamToPlayer(livePayload.fp, { vb: livePayload.p.vb });
         }
-        const enrichedPayload = enrichEvent(raw, { 
-          ip: auth?.ip || undefined, 
-          headers: { "user-agent": auth?.ua, "referer": auth?.re } 
+        const enrichedPayload = enrichEvent(raw, {
+          ip: auth?.ip || undefined,
+          headers: { "user-agent": auth?.ua, "referer": auth?.re }
         });
         await sendToKafka('tracking-events', enrichedPayload);
         logger.info(`✅ [WS] Real-time event '${raw.t}' sent to Kafka`);
@@ -229,6 +229,8 @@ export const setupLiveWebSocket = {
       }
     } catch (error) {
       logger.error('🚨 WS message error: ', error);
+      logger.error('RAW:', raw);
+      logger.error('AUTH:', auth);
     }
   }
 };
