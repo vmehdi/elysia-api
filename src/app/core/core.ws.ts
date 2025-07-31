@@ -145,6 +145,19 @@ export const setupLiveWebSocket = {
     const token = extractToken(ws);
     const sessionContext = getSessionContext(token);
     let payload: any = undefined;
+
+    // Parse raw safely if it's string
+    let data = raw;
+    if (typeof raw === 'string') {
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        logger.error('❌ Failed to parse WS message', raw);
+        return;
+      }
+    }
+    raw = data;
+
     try {
 
       if (raw.t === MessageType.IDENTIFY) {
