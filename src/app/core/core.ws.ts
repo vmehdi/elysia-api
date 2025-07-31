@@ -221,6 +221,10 @@ export const setupLiveWebSocket = {
 
       if (RealTimeEventTypes.has(raw.t)) {
         let livePayload = raw;
+        // If sessionContext is missing important fields, warn in logs
+        if (!sessionContext?.url || !sessionContext?.tb || !sessionContext?.s || !sessionContext?.l) {
+          logger.warn(`⚠️ Session context incomplete for token ${token}: ${sessionContext}`);
+        }
         if (raw?.p && isEncrypted(raw.p)) {
           try {
             livePayload = { ...raw, p: await decryptPayload(raw.p) };
