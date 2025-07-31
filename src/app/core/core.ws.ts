@@ -8,6 +8,7 @@ import { saveSessionContext, getSessionContext, removeSessionContext } from '@/u
 import { registerSocket, unregisterSocket } from '@/utils/socket-fingerprint-map';
 import { streamToPlayer } from '@/app/plugins/live-play';
 import { enrichEvent } from '@/utils/enrich-event';
+import { formatForLog } from '@/utils/helper';
 
 function extractToken(ws: ServerWebSocket<any>): string {
   return (ws.data as any)?.query?.token || '';
@@ -223,7 +224,7 @@ export const setupLiveWebSocket = {
         let livePayload = raw;
         // If sessionContext is missing important fields, warn in logs
         if (!sessionContext?.url || !sessionContext?.tb || !sessionContext?.s || !sessionContext?.l) {
-          logger.warn(`⚠️ Session context incomplete for token ${token}: ${sessionContext}`);
+          logger.warn(`⚠️ Session context incomplete for token ${token}: ${formatForLog(sessionContext)}`);
         }
         if (raw?.p && isEncrypted(raw.p)) {
           try {

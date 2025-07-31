@@ -52,3 +52,10 @@ export function userTransform(user: any) {
     ...user.profile,
   };
 }
+export function formatForLog(data: any): string {
+  try {
+    return JSON.stringify(data, null, 2); // pretty-print
+  } catch {
+    return String(data);
+  }
+}
