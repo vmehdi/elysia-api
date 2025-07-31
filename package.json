@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@bogeychan/elysia-logger": "^0.1.8",
+    "@changesets/cli": "^2.29.5",
     "@types/jsonwebtoken": "^9.0.10",
     "bun-types": "latest",
     "prettier": "^3.5.3"

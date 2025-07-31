@@ -144,22 +144,22 @@ export const setupLiveWebSocket = {
   async message(ws: ServerWebSocket<any>, raw: any) {
     const token = extractToken(ws);
     const sessionContext = getSessionContext(token);
+    let payload: any = undefined;
     try {
 
       if (raw.t === MessageType.IDENTIFY) {
 
-        if (sessionContext?.domainId) {
-          saveSessionContext(token, {
-            ...sessionContext,
-            domainId: sessionContext.domainId,
-            fingerprint: raw.fp || sessionContext.fingerprint,
-            tb: raw.tb || sessionContext.tb || null,
-            url: raw.url || sessionContext.url || null,
-            re: raw.rf || sessionContext.re || null,
-            s: raw.s || sessionContext.s || null,
-            l: raw.l || sessionContext.l || null
-          });
-        }
+        // Always update or initialize session context with Identify data
+        saveSessionContext(token, {
+          ...(sessionContext || {}),
+          domainId: sessionContext?.domainId || payload?.domainId || '',
+          fingerprint: raw.fp || sessionContext?.fingerprint || null,
+          tb: raw.tb || sessionContext?.tb || null,
+          url: raw.url || sessionContext?.url || null,
+          re: raw.rf || sessionContext?.re || null,
+          s: raw.s || sessionContext?.s || null,
+          l: raw.l || sessionContext?.l || null
+        });
 
         if (!sessionContext) {
           ws.send(JSON.stringify({ t: 'warn', p: { message: 'Auth not ready, retrying...' } }));
