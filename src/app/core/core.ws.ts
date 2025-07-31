@@ -228,9 +228,9 @@ export const setupLiveWebSocket = {
         logger.warn(`❓ Unknown or disallowed WebSocket message type: "${raw.t}"`);
       }
     } catch (error) {
-      logger.error('🚨 WS message error: ', error);
-      logger.error('RAW:', raw);
-      logger.error('AUTH:', auth);
+      logger.error(`🚨 WS message error: ${error}`);
+      // logger.error(`RAW: ${raw}`);
+      logger.error(`AUTH: ${auth}`);
     }
   }
 };
