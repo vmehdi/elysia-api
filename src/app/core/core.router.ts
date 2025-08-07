@@ -60,15 +60,7 @@ const coreRouter = new Elysia()
       "none",
   }))
   .get("/status", ({ ip }) => ({ success: true, ip, version: appVersion }))
-  .get(
-    '/v/:license',
-    checkLicense,
-    {
-      params: t.Object({
-        license: t.String(),
-      }),
-    }
-  )
+  .get('/c', checkLicense)
   .post(
     '/t',
     setTrack,

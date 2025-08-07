@@ -4,23 +4,23 @@ import { decryptPayload } from "@/utils/decryption-service";
 import { enrichEvent } from "@/utils/enrich-event";
 
 export const checkLicense = async ({
-  params,
+  query,
   set,
   jwtTrack,
 }: {
-  params: { license: string };
+  query: { uuid: string };
   set: any;
   jwtTrack: any;
 }) => {
-  const { license } = params;
+  const { uuid } = query;
 
-  if (!license) {
+  if (!uuid) {
     set.status = 400;
-    return { error: "License key is missing" };
+    return { error: "uuid key is missing" };
   }
 
   const domain = await prisma.domain.findUnique({
-    where: { uniqueId: license },
+    where: { uniqueId: uuid },
     include: {
       rules: true,
       trackers: true,
@@ -61,7 +61,7 @@ export const checkLicense = async ({
             : undefined,
         })),
     },
-    ex: (domain as any).extraOptions ?? { pr: false, cl: true },
+    ex: (domain as any).extraOptions ?? { pr: true, cl: true },
   };
 
   return {
