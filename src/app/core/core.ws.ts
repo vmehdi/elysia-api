@@ -9,6 +9,7 @@ import { registerSocket, unregisterSocket } from '@/utils/socket-fingerprint-map
 import { streamToPlayer } from '@/app/plugins/live-play';
 import { enrichEvent } from '@/utils/enrich-event';
 import { formatForLog } from '@/utils/helper';
+import { saveSingleEvent } from './ingestion.service';
 
 function extractToken(ws: ServerWebSocket<any>): string {
   return (ws.data as any)?.query?.token || '';
@@ -185,7 +186,7 @@ export const setupLiveWebSocket = {
           return;
         }
 
-        if (raw?.fp) registerSocket(raw.fp, ws, 'client');
+        if (raw?.p?.fp) registerSocket(raw.p.fp, ws, 'client');
 
         const domain = await prisma.domain.findUnique({
           where: { id: sessionContext.domainId },
@@ -235,20 +236,79 @@ export const setupLiveWebSocket = {
 
       if (RealTimeEventTypes.has(raw.t)) {
         let livePayload = raw;
+
         // If sessionContext is missing important fields, warn in logs
         if (!sessionContext?.url || !sessionContext?.tb || !sessionContext?.s || !sessionContext?.l) {
           logger.warn(`⚠️ Session context incomplete for token ${token}: ${formatForLog(sessionContext)}`);
         }
+
+        // Decrypt payload if encrypted
         if (raw?.p && isEncrypted(raw.p)) {
           try {
             livePayload = { ...raw, p: await decryptPayload(raw.p) };
+            logger.info(`🔓 [WS] Payload decrypted successfully for event type: ${raw.t}`);
           } catch (err) {
             logger.error('❌ Failed to decrypt payload for live streaming', err);
           }
         }
+
+        // Stream to live player if fingerprint exists
         if (livePayload?.fp) {
-          streamToPlayer(livePayload.fp, { vb: livePayload.p.vb });
+          logger.info(`🎬 [WS] Attempting to stream live event to player`, {
+            eventType: raw.t,
+            fingerprint: livePayload.fp,
+            hasPayload: !!livePayload.p,
+            payloadKeys: livePayload.p ? Object.keys(livePayload.p) : 'no payload'
+          });
+
+          // Check if this is a recording event (type 0, 2, 4)
+          if (livePayload.p?.vb && Array.isArray(livePayload.p.vb)) {
+            logger.info(`📹 [WS] Recording event detected, streaming ${livePayload.p.vb.length} events to player`);
+            streamToPlayer(livePayload.fp, { vb: livePayload.p.vb });
+
+            // Save recording data to database using ingestion service
+            try {
+              const payload = {
+                fp: livePayload.fp,
+                t: livePayload.t,
+                p: livePayload.p,
+                ts: Date.now(),
+                tb: sessionContext?.tb || 'unknown',
+                url: sessionContext?.url || 'unknown'
+              };
+              await saveSingleEvent(payload);
+              logger.info(`💾 [WS] Recording data saved to database for fingerprint: ${livePayload.fp}`);
+            } catch (dbError) {
+              logger.error(`❌ [WS] Failed to save recording data to database:`, dbError);
+            }
+          } else if (livePayload.p?.vb) {
+            logger.warn(`⚠️ [WS] vb exists but not an array:`, typeof livePayload.p.vb);
+          } else {
+            logger.info(`ℹ️ [WS] No vb data in payload, skipping player stream`);
+          }
+        } else {
+          logger.warn(`⚠️ [WS] No fingerprint found in live event, cannot stream to player`);
         }
+
+        // Save tracking events (type tr) to database
+        if (raw.t === 'tr') {
+          try {
+            const payload = {
+              fp: livePayload?.fp || 'unknown',
+              t: livePayload?.t || raw.t,
+              p: livePayload?.p || raw.p,
+              ts: Date.now(),
+              tb: sessionContext?.tb || 'unknown',
+              url: sessionContext?.url || 'unknown'
+            };
+            await saveSingleEvent(payload);
+            logger.info(`💾 [WS] Tracking event saved to database for fingerprint: ${livePayload?.fp || 'unknown'}`);
+          } catch (dbError) {
+            logger.error(`❌ [WS] Failed to save tracking event to database:`, dbError);
+          }
+        }
+
+        // Send to Kafka for processing
         const enrichedPayload = {
           ...enrichEvent(raw, {
             ip: sessionContext?.ip || undefined,
@@ -259,6 +319,7 @@ export const setupLiveWebSocket = {
           s: sessionContext?.s || null,
           l: sessionContext?.l || null
         };
+
         await sendToKafka('tracking-events', enrichedPayload);
         logger.info(`✅ [WS] Real-time event '${raw.t}' sent to Kafka`);
       } else {
