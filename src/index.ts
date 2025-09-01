@@ -44,6 +44,7 @@ const app = new Elysia()
   .use(liveLoggerPlugin)
   .use(livePlayerPlugin)
   .ws('/w', setupLiveWebSocket as any)
+  .ws('/ws', setupLiveWebSocket as any)
   .ws('/play-ws', setupLivePlyer as any)
   .onRequest(({ request }) => {
     const { url, method } = request;
