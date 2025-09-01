@@ -24,13 +24,13 @@ export const MessageType = {
 const RealTimeEventTypes = new Set(['tr', 'th']);
 
 const simulatedMessages = [
-  // {
-  //   delay: 10000,
-  //   message: {
-  //     t: MessageType.TRACKER_TOGGLE,
-  //     p: { tn: 'tr', s: true },
-  //   },
-  // },
+  {
+    delay: 10000,
+    message: {
+      t: MessageType.TRACKER_TOGGLE,
+      p: { tn: 'tr', s: true },
+    },
+  },
   {
     delay: 20000,
     message: {
@@ -59,26 +59,26 @@ const simulatedMessages = [
       p: { tn: 'th', s: false },
     },
   },
-  // {
-  //   delay: 15000,
-  //   message: {
-  //     t: MessageType.COMMAND,
-  //     p: {
-  //       t: 'tr',
-  //       a: 'makeSnapshot'
-  //     }
-  //   }
-  // },
-  // {
-  //   delay: 60000 * 60, // 1 houre
-  //   message: {
-  //     t: MessageType.TRACKER_TOGGLE,
-  //     p: {
-  //       t: 'tr',
-  //       a: false
-  //     }
-  //   }
-  // }
+  {
+    delay: 15000,
+    message: {
+      t: MessageType.COMMAND,
+      p: {
+        t: 'tr',
+        a: 'makeSnapshot'
+      }
+    }
+  },
+  {
+    delay: 60000 * 60, // 1 houre
+    message: {
+      t: MessageType.TRACKER_TOGGLE,
+      p: {
+        t: 'tr',
+        a: false
+      }
+    }
+  }
 ];
 
 export const setupLiveWebSocket = {
