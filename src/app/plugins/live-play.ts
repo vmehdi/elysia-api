@@ -49,12 +49,34 @@ export const setupLivePlyer: any = {
         ...(Array.isArray(recording.firstChunk) ? recording.firstChunk : [])
       ];
 
+      // Validate events before sending
+      const validEvents = essentialEvents.filter(ev => {
+        if (!ev || typeof ev !== 'object') return false;
+        const event = ev as any;
+        return event.t !== undefined && event.d !== undefined;
+      });
+
+      if (validEvents.length === 0) {
+        ws.send(JSON.stringify({
+          type: 'recording',
+          data: { vb: [] },
+          message: 'No valid events found in recording data'
+        }));
+        return;
+      }
+
       ws.send(JSON.stringify({
         type: 'recording',
-        data: { vb: essentialEvents }
+        data: { vb: validEvents },
+        message: `Loaded ${validEvents.length} events successfully`
       }));
     } catch (err) {
       console.error("Failed to load initial events:", err);
+      ws.send(JSON.stringify({
+        type: 'error',
+        error: 'Failed to load recording data',
+        details: err instanceof Error ? err.message : 'Unknown error'
+      }));
     }
   },
 
